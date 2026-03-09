@@ -11,6 +11,10 @@ function DashboardContent() {
     const { user, logout, isLoading } = useAuth();
     const router = useRouter();
     const [activeTab, setActiveTab] = useState('overview');
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+        if (typeof window !== 'undefined') return localStorage.getItem('pkwl_sidebar') === 'collapsed';
+        return false;
+    });
     const [overviewStats, setOverviewStats] = useState({
         bookings: 0, properties: 0, users: 0, pendingBookings: 0,
         favorites: 0, propertiesViewed: 0, messagesSent: 0,
@@ -85,41 +89,55 @@ function DashboardContent() {
                 { key: 'saved', label: 'Favorit', icon: '❤️' },
             ];
 
+    const toggleSidebar = () => {
+        const next = !sidebarCollapsed;
+        setSidebarCollapsed(next);
+        localStorage.setItem('pkwl_sidebar', next ? 'collapsed' : 'expanded');
+    };
+
     return (
         <div className={styles.dashboard}>
-            <aside className={styles.sidebar}>
+            <aside className={`${styles.sidebar} ${sidebarCollapsed ? styles.collapsed : ''}`}>
                 <div className={styles.sidebarHeader}>
-                    <Link href="/" className={styles.logo}>PKWL</Link>
-                    <span className={styles.roleTag}>{user.role}</span>
+                    <Link href="/" className={styles.logo}>{sidebarCollapsed ? 'P' : 'PKWL'}</Link>
+                    {!sidebarCollapsed && <span className={styles.roleTag}>{user.role}</span>}
                 </div>
+                <button className={styles.toggleBtn} onClick={toggleSidebar} title={sidebarCollapsed ? 'Expand' : 'Collapse'}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: sidebarCollapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }}>
+                        <path d="M15 18l-6-6 6-6" />
+                    </svg>
+                </button>
                 <nav className={styles.sideNav}>
                     {menuItems.map(item => (
                         <button
                             key={item.key}
                             className={`${styles.navItem} ${activeTab === item.key ? styles.active : ''}`}
                             onClick={() => setActiveTab(item.key)}
+                            title={sidebarCollapsed ? item.label : undefined}
                         >
                             <span>{item.icon}</span>
-                            {item.label}
-                            {item.key === 'livechat' && <LiveChatBadge />}
+                            {!sidebarCollapsed && item.label}
+                            {!sidebarCollapsed && item.key === 'livechat' && <LiveChatBadge />}
                         </button>
                     ))}
                 </nav>
                 <div className={styles.sidebarFooter}>
                     <div className={styles.userInfo}>
                         <div className={styles.avatar}>{user.name.charAt(0)}</div>
-                        <div>
-                            <p className={styles.userName}>{user.name}</p>
-                            <p className={styles.userEmail}>{user.email}</p>
-                        </div>
+                        {!sidebarCollapsed && (
+                            <div>
+                                <p className={styles.userName}>{user.name}</p>
+                                <p className={styles.userEmail}>{user.email}</p>
+                            </div>
+                        )}
                     </div>
                     <button className={styles.logoutBtn} onClick={() => { logout(); router.push('/'); }}>
-                        Keluar
+                        {sidebarCollapsed ? '🚪' : 'Keluar'}
                     </button>
                 </div>
             </aside>
 
-            <main className={styles.mainContent}>
+            <main className={`${styles.mainContent} ${sidebarCollapsed ? styles.mainCollapsed : ''}`}>
                 <header className={styles.topbar}>
                     <h1>
                         {activeTab === 'overview' ? `Halo, ${user.name}!` : menuItems.find(m => m.key === activeTab)?.label}

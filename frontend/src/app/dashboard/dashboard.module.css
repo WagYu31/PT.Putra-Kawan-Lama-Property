@@ -37,7 +37,32 @@
     left: 0;
     bottom: 0;
     z-index: 100;
-    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+}
+
+.sidebar.collapsed {
+    width: 72px;
+}
+
+/* Toggle button */
+.toggleBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 8px 0;
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+    background: rgba(201, 168, 76, 0.03);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.toggleBtn:hover {
+    background: rgba(201, 168, 76, 0.08);
+    color: var(--gold-primary);
 }
 
 .sidebarHeader {
@@ -46,6 +71,13 @@
     align-items: center;
     gap: 12px;
     border-bottom: 1px solid var(--border-color);
+    transition: padding 0.35s;
+    white-space: nowrap;
+}
+
+.collapsed .sidebarHeader {
+    justify-content: center;
+    padding: 24px 12px;
 }
 
 .logo {
@@ -54,6 +86,13 @@
     font-weight: 700;
     letter-spacing: 3px;
     color: var(--text-primary);
+    white-space: nowrap;
+    transition: font-size 0.3s;
+}
+
+.collapsed .logo {
+    font-size: 1.4rem;
+    letter-spacing: 0;
 }
 
 .roleTag {
@@ -66,6 +105,7 @@
     background: rgba(201, 168, 76, 0.15);
     color: var(--gold-primary);
     animation: tagGlow 3s ease-in-out infinite;
+    white-space: nowrap;
 }
 
 @keyframes tagGlow {
@@ -88,6 +128,11 @@
     gap: 4px;
 }
 
+.collapsed .sideNav {
+    padding: 16px 8px;
+    align-items: center;
+}
+
 .navItem {
     display: flex;
     align-items: center;
@@ -104,6 +149,7 @@
     width: 100%;
     position: relative;
     overflow: hidden;
+    white-space: nowrap;
 }
 
 .navItem::before {
@@ -135,9 +181,31 @@
     height: 60%;
 }
 
+/* Collapsed nav items */
+.collapsed .navItem {
+    justify-content: center;
+    padding: 12px;
+    width: 48px;
+    height: 48px;
+    gap: 0;
+}
+
+.collapsed .navItem:hover {
+    transform: scale(1.08);
+}
+
+.collapsed .navItem::before {
+    display: none;
+}
+
 .sidebarFooter {
     padding: 16px;
     border-top: 1px solid var(--border-color);
+    transition: padding 0.35s;
+}
+
+.collapsed .sidebarFooter {
+    padding: 12px 8px;
 }
 
 .userInfo {
@@ -145,6 +213,11 @@
     align-items: center;
     gap: 12px;
     margin-bottom: 12px;
+}
+
+.collapsed .userInfo {
+    justify-content: center;
+    margin-bottom: 8px;
 }
 
 .avatar {
@@ -159,6 +232,7 @@
     font-weight: 700;
     font-size: 0.9rem;
     box-shadow: 0 2px 10px rgba(201, 168, 76, 0.2);
+    flex-shrink: 0;
 }
 
 .userName {
@@ -195,6 +269,11 @@
 .mainContent {
     flex: 1;
     margin-left: 260px;
+    transition: margin-left 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mainCollapsed {
+    margin-left: 72px;
 }
 
 .topbar {
@@ -662,10 +741,18 @@
     .sidebar {
         width: 220px;
         transform: translateX(-100%);
-        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), width 0.3s;
+    }
+
+    .sidebar.collapsed {
+        width: 0;
     }
 
     .mainContent {
+        margin-left: 0;
+    }
+
+    .mainCollapsed {
         margin-left: 0;
     }
 
