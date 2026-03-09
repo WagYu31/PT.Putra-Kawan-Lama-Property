@@ -41,13 +41,33 @@ export default function PropertiesPage() {
     const [filterCategory, setFilterCategory] = useState('');
     const [filterCity, setFilterCity] = useState('');
     const [search, setSearch] = useState('');
+    const [favIds, setFavIds] = useState<number[]>([]);
 
     useEffect(() => {
         api<{ properties: Property[] }>('/api/properties')
             .then(data => setProperties(data.properties || []))
             .catch(() => setProperties([]))
             .finally(() => setLoading(false));
+
+        // Load favorite IDs
+        const token = localStorage.getItem('pkwl_token');
+        if (token) {
+            fetch('http://localhost:8081/api/favorites/ids', {
+                headers: { Authorization: `Bearer ${token}` },
+            }).then(r => r.json()).then(d => setFavIds(d.favorited_ids || [])).catch(() => { });
+        }
     }, []);
+
+    const toggleFav = async (e: React.MouseEvent, propId: number) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const token = localStorage.getItem('pkwl_token');
+        if (!token) { alert('Silakan login terlebih dahulu untuk menambah favorit'); return; }
+        await fetch(`http://localhost:8081/api/favorites/${propId}/toggle`, {
+            method: 'POST', headers: { Authorization: `Bearer ${token}` },
+        });
+        setFavIds(prev => prev.includes(propId) ? prev.filter(id => id !== propId) : [...prev, propId]);
+    };
 
     const filtered = properties.filter(p => {
         if (filterType && p.type !== filterType) return false;
@@ -82,7 +102,7 @@ export default function PropertiesPage() {
                             <option value="">Semua Tipe</option>
                             <option value="sell">Dijual</option>
                             <option value="rent">Disewa</option>
-                            <option value="both">Jual & Sewa</option>
+                            <option value="both">Jual &amp; Sewa</option>
                         </select>
                         <select className="form-select" value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
                             <option value="">Semua Kategori</option>
@@ -109,6 +129,15 @@ export default function PropertiesPage() {
                                                 <span className={`${styles.typeBadge} ${styles[p.type]}`}>{typeLabels[p.type]}</span>
                                                 <span className={styles.catBadge}>{categoryLabels[p.category]}</span>
                                             </div>
+                                            <button onClick={(e) => toggleFav(e, p.id)} style={{
+                                                position: 'absolute', top: 10, right: 10, background: 'rgba(0,0,0,0.45)',
+                                                border: 'none', borderRadius: '50%', width: 36, height: 36,
+                                                cursor: 'pointer', fontSize: '1.1rem', display: 'flex',
+                                                alignItems: 'center', justifyContent: 'center',
+                                                transition: 'transform 0.2s',
+                                            }} title={favIds.includes(p.id) ? 'Hapus dari favorit' : 'Tambah ke favorit'}>
+                                                {favIds.includes(p.id) ? '❤️' : '🤍'}
+                                            </button>
                                         </div>
                                         <div className={styles.cardBody}>
                                             <div className={styles.price}>
