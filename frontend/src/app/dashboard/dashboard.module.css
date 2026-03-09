@@ -65,6 +65,40 @@
     color: var(--gold-primary);
 }
 
+/* Hamburger icon */
+.hamburger {
+    width: 20px;
+    height: 14px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.hamburger span {
+    display: block;
+    width: 100%;
+    height: 2px;
+    background: currentColor;
+    border-radius: 2px;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transform-origin: center;
+}
+
+/* X state */
+.hamburgerActive span:nth-child(1) {
+    transform: translateY(6px) rotate(45deg);
+}
+
+.hamburgerActive span:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0);
+}
+
+.hamburgerActive span:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg);
+}
+
 .sidebarHeader {
     padding: 24px;
     display: flex;
