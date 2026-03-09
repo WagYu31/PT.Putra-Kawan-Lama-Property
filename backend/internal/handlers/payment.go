@@ -50,6 +50,16 @@ func (h *PaymentHandler) CreateSnapToken(c *gin.Context) {
 
 	// ===== INSTALLMENT PURCHASE: auto-generate schedule & pay next =====
 	if booking.BookingType == models.BookingTypePurchase && booking.PaymentMethod == "installment" {
+		// Auto-fix legacy bookings with missing tenor/dp
+		if booking.InstallmentTenor == 0 {
+			booking.InstallmentTenor = 12
+			h.DB.Model(&booking).Update("installment_tenor", 12)
+		}
+		if booking.DPAmount <= 0 {
+			booking.DPAmount = math.Round(booking.TotalPrice * 0.10)
+			h.DB.Model(&booking).Update("dp_amount", booking.DPAmount)
+		}
+
 		if len(booking.Payments) == 0 {
 			h.generateInstallmentSchedule(&booking)
 			// Reload
@@ -306,6 +316,20 @@ func (h *PaymentHandler) GetInstallmentSchedule(c *gin.Context) {
 
 	var payments []models.Payment
 	h.DB.Where("booking_id = ?", booking.ID).Order("billing_period ASC").Find(&payments)
+
+	// Auto-generate schedule if installment booking with no payments
+	if booking.PaymentMethod == "installment" && len(payments) == 0 {
+		if booking.InstallmentTenor == 0 {
+			booking.InstallmentTenor = 12
+			h.DB.Model(&booking).Update("installment_tenor", 12)
+		}
+		if booking.DPAmount <= 0 {
+			booking.DPAmount = math.Round(booking.TotalPrice * 0.10)
+			h.DB.Model(&booking).Update("dp_amount", booking.DPAmount)
+		}
+		h.generateInstallmentSchedule(&booking)
+		h.DB.Where("booking_id = ?", booking.ID).Order("billing_period ASC").Find(&payments)
+	}
 
 	// Calculate summary
 	var totalPaid, totalRemaining float64
