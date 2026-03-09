@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
+import { ThemeToggle } from '@/lib/theme';
 import styles from './Navbar.module.css';
 
 export default function Navbar() {
@@ -45,6 +46,7 @@ export default function Navbar() {
                     <Link href="/properties" onClick={() => setMenuOpen(false)}>Properti</Link>
                     <Link href="/about" onClick={() => setMenuOpen(false)}>Tentang</Link>
                     <Link href="/contact" onClick={() => setMenuOpen(false)}>Kontak</Link>
+                    <ThemeToggle />
                     {user ? (
                         <Link href="/dashboard" className={`btn btn-primary btn-sm ${styles.dashBtn}`} onClick={() => setMenuOpen(false)}>
                             Dashboard

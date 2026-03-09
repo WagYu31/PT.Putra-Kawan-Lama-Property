@@ -331,6 +331,14 @@
     font-weight: 600;
 }
 
+:global([data-theme="light"]) .topbar {
+    background: rgba(255, 255, 255, 0.9);
+}
+
+:global([data-theme="light"]) .sidebar {
+    background: #ffffff;
+}
+
 .content {
     padding: 32px;
     animation: contentSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);

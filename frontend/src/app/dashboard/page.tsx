@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AuthProvider, useAuth } from '@/lib/auth';
+import { ThemeToggle } from '@/lib/theme';
 import { LiveChatProvider, useLiveChat } from '@/lib/livechat';
 import AdminLiveChat from '@/components/dashboard/AdminLiveChat';
 import styles from './dashboard.module.css';
@@ -146,7 +147,8 @@ function DashboardContent() {
                             {activeTab === 'overview' ? `Halo, ${user.name}!` : menuItems.find(m => m.key === activeTab)?.label}
                         </h1>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <ThemeToggle />
                         <NotificationBell />
                         <Link href="/" className="btn btn-ghost btn-sm">← Ke Website</Link>
                     </div>

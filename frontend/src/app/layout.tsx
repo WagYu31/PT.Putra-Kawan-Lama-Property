@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { ThemeProvider } from "@/lib/theme";
 
 export const metadata: Metadata = {
   title: "PT. Putra Kawan Lama | Sewa & Jual Properti Premium",
@@ -23,14 +24,25 @@ export const viewport: Viewport = {
   themeColor: "#060b18",
 };
 
+// Anti-flash script to set theme before React hydrates
+const themeScript = `
+  (function() {
+    try {
+      var t = localStorage.getItem('pkwl_theme');
+      if (t) document.documentElement.setAttribute('data-theme', t);
+    } catch(e) {}
+  })();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id">
+    <html lang="id" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -41,7 +53,9 @@ export default function RootLayout({
         ></script>
       </head>
       <body>
-        {children}
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
