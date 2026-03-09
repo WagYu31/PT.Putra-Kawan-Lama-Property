@@ -27,7 +27,7 @@ function DashboardContent() {
     useEffect(() => {
         if (!user) return;
         const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('pkwl_token');
         const headers: Record<string, string> = { 'Authorization': `Bearer ${token}` };
         const fetchStats = async () => {
             try {
