@@ -1,3 +1,4 @@
+/* ==================== LOADING ==================== */
 .loading {
     min-height: 100vh;
     display: flex;
@@ -7,11 +8,24 @@
     font-size: 1.1rem;
 }
 
+/* ==================== DASHBOARD LAYOUT ==================== */
 .dashboard {
     display: flex;
     min-height: 100vh;
+    animation: dashFadeIn 0.5s ease-out;
 }
 
+@keyframes dashFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* ==================== SIDEBAR ==================== */
 .sidebar {
     width: 260px;
     background: var(--bg-secondary);
@@ -23,6 +37,7 @@
     left: 0;
     bottom: 0;
     z-index: 100;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .sidebarHeader {
@@ -50,6 +65,19 @@
     border-radius: 50px;
     background: rgba(201, 168, 76, 0.15);
     color: var(--gold-primary);
+    animation: tagGlow 3s ease-in-out infinite;
+}
+
+@keyframes tagGlow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 rgba(201, 168, 76, 0);
+    }
+
+    50% {
+        box-shadow: 0 0 12px rgba(201, 168, 76, 0.15);
+    }
 }
 
 .sideNav {
@@ -68,23 +96,43 @@
     border-radius: 10px;
     font-size: 0.9rem;
     color: var(--text-secondary);
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     cursor: pointer;
     border: none;
     background: none;
     text-align: left;
     width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.navItem::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 0;
+    background: var(--gold-primary);
+    border-radius: 0 2px 2px 0;
+    transition: height 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .navItem:hover {
     background: var(--bg-tertiary);
     color: var(--text-primary);
+    transform: translateX(4px);
 }
 
 .navItem.active {
-    background: rgba(201, 168, 76, 0.1);
+    background: rgba(201, 168, 76, 0.08);
     color: var(--gold-primary);
     font-weight: 600;
+}
+
+.navItem.active::before {
+    height: 60%;
 }
 
 .sidebarFooter {
@@ -103,13 +151,14 @@
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: var(--gold-primary);
+    background: var(--gold-gradient);
     color: var(--bg-primary);
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
     font-size: 0.9rem;
+    box-shadow: 0 2px 10px rgba(201, 168, 76, 0.2);
 }
 
 .userName {
@@ -132,15 +181,17 @@
     font-size: 0.85rem;
     cursor: pointer;
     background: none;
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .logoutBtn:hover {
     border-color: var(--accent-danger);
     color: var(--accent-danger);
+    background: rgba(239, 68, 68, 0.05);
+    transform: translateY(-1px);
 }
 
-/* Main Content */
+/* ==================== MAIN CONTENT ==================== */
 .mainContent {
     flex: 1;
     margin-left: 260px;
@@ -152,7 +203,12 @@
     align-items: center;
     padding: 24px 32px;
     border-bottom: 1px solid var(--border-color);
-    background: var(--bg-secondary);
+    background: rgba(13, 20, 36, 0.85);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    position: sticky;
+    top: 0;
+    z-index: 50;
 }
 
 .topbar h1 {
@@ -162,9 +218,22 @@
 
 .content {
     padding: 32px;
+    animation: contentSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Overview Stats */
+@keyframes contentSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==================== OVERVIEW STATS ==================== */
 .overviewGrid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -179,12 +248,55 @@
     display: flex;
     align-items: center;
     gap: 16px;
-    transition: all 0.2s;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+    animation: statCardIn 0.5s ease-out both;
+}
+
+.statCard::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 80px;
+    height: 80px;
+    background: radial-gradient(circle, rgba(201, 168, 76, 0.06), transparent 70%);
+    pointer-events: none;
+}
+
+.statCard:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.statCard:nth-child(2) {
+    animation-delay: 0.05s;
+}
+
+.statCard:nth-child(3) {
+    animation-delay: 0.1s;
+}
+
+.statCard:nth-child(4) {
+    animation-delay: 0.15s;
+}
+
+@keyframes statCardIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .statCard:hover {
-    border-color: var(--border-hover);
-    transform: translateY(-2px);
+    border-color: rgba(201, 168, 76, 0.25);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(201, 168, 76, 0.08), 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .statIcon {
@@ -195,13 +307,21 @@
     align-items: center;
     justify-content: center;
     font-size: 1.3rem;
+    transition: transform 0.3s;
+}
+
+.statCard:hover .statIcon {
+    transform: scale(1.1);
 }
 
 .statValue {
     font-family: var(--font-display);
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--text-primary);
+    background: linear-gradient(135deg, var(--text-primary), var(--gold-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .statLabel {
@@ -210,12 +330,13 @@
     margin-top: 2px;
 }
 
-/* Tables */
+/* ==================== TABLES ==================== */
 .tableContainer {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: 14px;
     padding: 24px;
+    animation: contentSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
 }
 
 .tableContainer h2 {
@@ -255,16 +376,43 @@
     font-size: 0.9rem;
     color: var(--text-secondary);
     border-bottom: 1px solid rgba(201, 168, 76, 0.05);
+    transition: all 0.2s;
+}
+
+.table tr {
+    transition: all 0.2s;
 }
 
 .table tr:hover td {
-    background: rgba(201, 168, 76, 0.03);
+    background: rgba(201, 168, 76, 0.04);
+    color: var(--text-primary);
 }
 
-/* Empty State */
+.table tr:hover td:first-child {
+    border-radius: 8px 0 0 8px;
+}
+
+.table tr:hover td:last-child {
+    border-radius: 0 8px 8px 0;
+}
+
+/* ==================== EMPTY STATE ==================== */
 .emptyState {
     text-align: center;
     padding: 80px 0;
+    animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .emptyIcon {
@@ -282,7 +430,7 @@
     color: var(--text-muted);
 }
 
-/* Chat Badge */
+/* ==================== CHAT BADGE ==================== */
 .chatBadge {
     margin-left: auto;
     background: var(--accent-danger);
@@ -304,33 +452,58 @@
     }
 
     50% {
-        transform: scale(1.1);
+        transform: scale(1.15);
     }
 }
 
-/* ===== PROPERTY MODAL ===== */
+/* ==================== MODALS ==================== */
 .modalOverlay {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     z-index: 1000;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 20px;
+    animation: overlayIn 0.25s ease-out;
+}
+
+@keyframes overlayIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .modalContent {
     background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(201, 168, 76, 0.15);
     border-radius: 16px;
     width: 100%;
     max-width: 720px;
     max-height: 85vh;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), 0 0 40px rgba(201, 168, 76, 0.06);
+    animation: modalIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 .modalHeader {
@@ -360,6 +533,7 @@
 .modalClose:hover {
     background: rgba(255, 255, 255, 0.08);
     color: var(--text-primary);
+    transform: rotate(90deg);
 }
 
 .modalBody {
@@ -376,7 +550,7 @@
     border-top: 1px solid var(--border-color);
 }
 
-/* Form Styles */
+/* ==================== FORM STYLES ==================== */
 .formSection {
     margin-bottom: 24px;
 }
@@ -417,7 +591,7 @@
     background: var(--bg-primary);
     color: var(--text-primary);
     font-size: 0.9rem;
-    transition: border-color 0.2s;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     font-family: inherit;
 }
 
@@ -426,6 +600,7 @@
 .formGroup textarea:focus {
     outline: none;
     border-color: var(--gold-primary);
+    box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.08), 0 0 16px rgba(201, 168, 76, 0.04);
 }
 
 .formGroup textarea {
@@ -433,7 +608,7 @@
     min-height: 60px;
 }
 
-/* Facility Chips */
+/* ==================== FACILITY CHIPS ==================== */
 .facilityGrid {
     display: flex;
     flex-wrap: wrap;
@@ -448,12 +623,13 @@
     border: 1px solid var(--border-color);
     background: var(--bg-primary);
     color: var(--text-secondary);
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     user-select: none;
 }
 
 .facilityChip:hover {
     border-color: var(--gold-primary);
+    transform: translateY(-2px);
 }
 
 .facilityActive {
@@ -461,9 +637,10 @@
     border-color: var(--gold-primary);
     color: var(--gold-primary);
     font-weight: 500;
+    box-shadow: 0 2px 12px rgba(201, 168, 76, 0.1);
 }
 
-/* Checkbox */
+/* ==================== CHECKBOX ==================== */
 .checkboxLabel {
     display: flex;
     align-items: center;
@@ -480,12 +657,12 @@
     height: 18px;
 }
 
-/* Responsive */
+/* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
     .sidebar {
         width: 220px;
         transform: translateX(-100%);
-        transition: transform 0.3s;
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .mainContent {
