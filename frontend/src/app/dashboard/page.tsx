@@ -188,20 +188,20 @@ function DashboardContent() {
                             {/* Two Column Layout */}
                             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem', marginTop: '1.5rem' }}>
                                 {/* Recent Bookings */}
-                                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '1.5rem' }}>
+                                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.5rem' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                                        <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#fff' }}>📋 Booking Terbaru</h3>
-                                        <button onClick={() => setActiveTab('bookings')} style={{ background: 'none', border: 'none', color: '#c9a84c', cursor: 'pointer', fontSize: '0.85rem' }}>Lihat Semua →</button>
+                                        <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-primary)' }}>📋 Booking Terbaru</h3>
+                                        <button onClick={() => setActiveTab('bookings')} style={{ background: 'none', border: 'none', color: 'var(--gold-primary)', cursor: 'pointer', fontSize: '0.85rem' }}>Lihat Semua →</button>
                                     </div>
                                     {recentBookings.length > 0 ? (
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                             {recentBookings.map((b: { id: number; booking_type: string; status: string; property?: { title: string }; created_at: string; total_price?: number; payment_method?: string }) => (
-                                                <div key={b.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.85rem 1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                                                <div key={b.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.85rem 1rem', background: 'var(--bg-tertiary)', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                                                         <span style={{ fontSize: '1.3rem' }}>{b.booking_type === 'survey' ? '🔍' : b.booking_type === 'purchase' ? '🏠' : '📝'}</span>
                                                         <div>
-                                                            <p style={{ fontWeight: 500, color: '#fff', fontSize: '0.9rem' }}>{b.property?.title || 'Properti'}</p>
-                                                            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem' }}>
+                                                            <p style={{ fontWeight: 500, color: 'var(--text-primary)', fontSize: '0.9rem' }}>{b.property?.title || 'Properti'}</p>
+                                                            <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
                                                                 {b.booking_type === 'survey' ? 'Survey' : b.booking_type === 'purchase' ? (b.payment_method === 'installment' ? 'Pembelian Cicilan' : 'Pembelian Cash') : 'Sewa'}
                                                                 {' · '}{new Date(b.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                                                             </p>
@@ -215,16 +215,16 @@ function DashboardContent() {
                                                         }}>
                                                             {b.status === 'completed' ? '✅ Selesai' : b.status === 'confirmed' ? '✅ Dikonfirmasi' : b.status === 'cancelled' ? '❌ Dibatalkan' : '⏳ Pending'}
                                                         </span>
-                                                        {b.total_price ? <p style={{ color: '#c9a84c', fontSize: '0.8rem', marginTop: '4px', fontWeight: 600 }}>Rp {(b.total_price / 1e9).toFixed(1)} M</p> : null}
+                                                        {b.total_price ? <p style={{ color: 'var(--gold-primary)', fontSize: '0.8rem', marginTop: '4px', fontWeight: 600 }}>Rp {(b.total_price / 1e9).toFixed(1)} M</p> : null}
                                                     </div>
                                                 </div>
                                             ))}
                                         </div>
                                     ) : (
-                                        <div style={{ textAlign: 'center', padding: '2rem', color: 'rgba(255,255,255,0.3)' }}>
+                                        <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
                                             <p style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📋</p>
                                             <p>Belum ada booking</p>
-                                            <button onClick={() => router.push('/properties')} style={{ marginTop: '0.75rem', padding: '8px 16px', background: '#c9a84c', color: '#000', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>Jelajahi Properti</button>
+                                            <button onClick={() => router.push('/properties')} style={{ marginTop: '0.75rem', padding: '8px 16px', background: 'var(--gold-primary)', color: '#000', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>Jelajahi Properti</button>
                                         </div>
                                     )}
                                 </div>
@@ -232,10 +232,10 @@ function DashboardContent() {
                                 {/* Quick Actions & Info */}
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                                     {/* Quick Actions */}
-                                    <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '1.5rem' }}>
-                                        <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#fff', marginBottom: '1rem' }}>⚡ Aksi Cepat</h3>
+                                    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.5rem' }}>
+                                        <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '1rem' }}>⚡ Aksi Cepat</h3>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                            <button onClick={() => router.push('/properties')} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.15)', borderRadius: '10px', color: '#c9a84c', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, textAlign: 'left' }}>
+                                            <button onClick={() => router.push('/properties')} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.15)', borderRadius: '10px', color: 'var(--gold-primary)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, textAlign: 'left' }}>
                                                 🏠 Cari Properti
                                             </button>
                                             <button onClick={() => setActiveTab('bookings')} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.15)', borderRadius: '10px', color: '#3b82f6', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, textAlign: 'left' }}>
@@ -254,11 +254,11 @@ function DashboardContent() {
 
                                     {/* Info Card */}
                                     <div style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.1), rgba(201,168,76,0.03))', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '16px', padding: '1.5rem' }}>
-                                        <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#c9a84c', marginBottom: '0.75rem' }}>💡 Tips</h3>
+                                        <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--gold-primary)', marginBottom: '0.75rem' }}>💡 Tips</h3>
                                         <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                            <li style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>• Jadwalkan survey terlebih dahulu sebelum membeli</li>
-                                            <li style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>• Cicilan tersedia untuk tenor 3, 6, atau 12 bulan</li>
-                                            <li style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>• Pantau status pembayaran di menu Pembayaran</li>
+                                            <li style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>• Jadwalkan survey terlebih dahulu sebelum membeli</li>
+                                            <li style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>• Cicilan tersedia untuk tenor 3, 6, atau 12 bulan</li>
+                                            <li style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>• Pantau status pembayaran di menu Pembayaran</li>
                                         </ul>
                                     </div>
                                 </div>
