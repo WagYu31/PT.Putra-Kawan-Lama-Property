@@ -935,14 +935,12 @@ function BookingManager() {
                                         {user?.role === 'customer' && b.status === 'pending' && b.booking_type === 'survey' && (
                                             <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>⏳ Menunggu konfirmasi admin</span>
                                         )}
-                                        {/* Survey confirmed → Lanjut Bayar langsung (tanpa upload dokumen) */}
+                                        {/* Survey confirmed = admin sudah setuju, menunggu jadwal survey */}
                                         {user?.role === 'customer' && b.status === 'confirmed' && b.booking_type === 'survey' && (
-                                            <button className="btn btn-sm btn-primary" onClick={() => { setPayModal(b); setPayMethod('cash'); }}>
-                                                💳 Lanjut Bayar
-                                            </button>
+                                            <span style={{ color: '#3b82f6', fontSize: '0.8rem' }}>📅 Survey dikonfirmasi</span>
                                         )}
-                                        {/* Purchase/Rental: upload dokumen dulu sebelum bayar */}
-                                        {user?.role === 'customer' && (b.booking_type === 'purchase' || b.booking_type === 'rental') && (!b.doc_status || b.doc_status === '' || b.doc_status === 'doc_rejected') && (
+                                        {/* Purchase/Rental CONFIRMED + no docs → Upload Dokumen */}
+                                        {user?.role === 'customer' && b.status === 'confirmed' && (b.booking_type === 'purchase' || b.booking_type === 'rental') && (!b.doc_status || b.doc_status === '' || b.doc_status === 'doc_rejected') && (
                                             <button className="btn btn-sm" style={{ background: '#3b82f6', color: '#fff' }} onClick={() => setDocModal(b)}>
                                                 📄 Upload Dokumen
                                             </button>
@@ -953,8 +951,10 @@ function BookingManager() {
                                         {user?.role === 'customer' && (b.booking_type === 'purchase' || b.booking_type === 'rental') && b.doc_status === 'doc_pending' && (
                                             <span style={{ color: '#f59e0b', fontSize: '0.8rem' }}>⏳ Dokumen menunggu verifikasi</span>
                                         )}
-                                        {user?.role === 'customer' && (b.booking_type === 'purchase' || b.booking_type === 'rental') && b.doc_status === 'doc_approved' && (
-                                            <span style={{ color: '#10b981', fontSize: '0.8rem' }}>✅ Dokumen disetujui</span>
+                                        {user?.role === 'customer' && b.status === 'confirmed' && (b.booking_type === 'purchase' || b.booking_type === 'rental') && b.doc_status === 'doc_approved' && (
+                                            <button className="btn btn-sm btn-primary" onClick={() => { setPayModal(b); setPayMethod('cash'); }}>
+                                                💳 Lanjut Bayar
+                                            </button>
                                         )}
                                         {user?.role === 'admin' && (b.booking_type === 'purchase' || b.booking_type === 'rental') && b.doc_status === 'doc_pending' && (
                                             <button className="btn btn-sm" style={{ background: '#8b5cf6', color: '#fff' }} onClick={() => setDocReviewModal(b)}>
