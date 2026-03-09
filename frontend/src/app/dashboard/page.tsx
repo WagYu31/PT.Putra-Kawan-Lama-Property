@@ -1382,7 +1382,23 @@ function FavoritesTab() {
                 {favorites.map(fav => {
                     const p = fav.property;
                     if (!p) return null;
-                    const img = p.images?.length > 0 ? `http://localhost:8081${p.images[0]}` : '';
+                    const fallbackImages: Record<string, string> = {
+                        house: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=600&h=400&fit=crop',
+                        apartment: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&h=400&fit=crop',
+                        villa: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&h=400&fit=crop',
+                        commercial: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&h=400&fit=crop',
+                        land: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&h=400&fit=crop',
+                        warehouse: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=600&h=400&fit=crop',
+                    };
+                    const getImg = () => {
+                        if (p.images && p.images.length > 0) {
+                            const first = p.images[0];
+                            if (first.startsWith('/uploads/')) return `http://localhost:8081${first}`;
+                            return first;
+                        }
+                        return fallbackImages[p.category] || fallbackImages.house;
+                    };
+                    const img = getImg();
                     return (
                         <div key={fav.id} style={{
                             background: 'var(--bg-card, #1a1f2e)', borderRadius: 12,
