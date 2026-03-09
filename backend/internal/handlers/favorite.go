@@ -37,13 +37,13 @@ func (h *FavoriteHandler) Toggle(c *gin.Context) {
 		return
 	}
 
-	// Check if already favorited
+	// Check if already favorited (including soft-deleted)
 	var existing models.Favorite
-	err := h.DB.Where("user_id = ? AND property_id = ?", userID, propertyID).First(&existing).Error
+	err := h.DB.Unscoped().Where("user_id = ? AND property_id = ?", userID, propertyID).First(&existing).Error
 
 	if err == nil {
-		// Already favorited → remove
-		h.DB.Delete(&existing)
+		// Already exists → hard delete
+		h.DB.Unscoped().Delete(&existing)
 		c.JSON(http.StatusOK, gin.H{"action": "removed", "message": "Dihapus dari favorit"})
 		return
 	}
