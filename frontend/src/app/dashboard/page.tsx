@@ -102,13 +102,6 @@ function DashboardContent() {
                     <Link href="/" className={styles.logo}>{sidebarCollapsed ? 'P' : 'PKWL'}</Link>
                     {!sidebarCollapsed && <span className={styles.roleTag}>{user.role}</span>}
                 </div>
-                <button className={styles.toggleBtn} onClick={toggleSidebar} title={sidebarCollapsed ? 'Expand' : 'Collapse'}>
-                    <div className={`${styles.hamburger} ${sidebarCollapsed ? styles.hamburgerActive : ''}`}>
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </div>
-                </button>
                 <nav className={styles.sideNav}>
                     {menuItems.map(item => (
                         <button
@@ -141,9 +134,18 @@ function DashboardContent() {
 
             <main className={`${styles.mainContent} ${sidebarCollapsed ? styles.mainCollapsed : ''}`}>
                 <header className={styles.topbar}>
-                    <h1>
-                        {activeTab === 'overview' ? `Halo, ${user.name}!` : menuItems.find(m => m.key === activeTab)?.label}
-                    </h1>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <button className={styles.toggleBtn} onClick={toggleSidebar} title={sidebarCollapsed ? 'Expand' : 'Collapse'}>
+                            <div className={`${styles.hamburger} ${sidebarCollapsed ? styles.hamburgerActive : ''}`}>
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                        </button>
+                        <h1>
+                            {activeTab === 'overview' ? `Halo, ${user.name}!` : menuItems.find(m => m.key === activeTab)?.label}
+                        </h1>
+                    </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                         <NotificationBell />
                         <Link href="/" className="btn btn-ghost btn-sm">← Ke Website</Link>

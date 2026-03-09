@@ -45,19 +45,21 @@
     width: 72px;
 }
 
-/* Toggle button */
+/* Toggle button (in topbar) */
 .toggleBtn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 100%;
-    padding: 8px 0;
-    border: none;
-    border-bottom: 1px solid var(--border-color);
-    background: rgba(201, 168, 76, 0.03);
-    color: var(--text-muted);
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text-secondary);
     cursor: pointer;
     transition: all 0.3s;
+    flex-shrink: 0;
 }
 
 .toggleBtn:hover {
