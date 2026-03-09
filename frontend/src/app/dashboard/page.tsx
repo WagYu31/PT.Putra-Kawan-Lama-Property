@@ -1210,6 +1210,11 @@ function CicilanManager() {
                             }}>
                                 <div>
                                     <h3 style={{ marginBottom: 4, fontSize: '1rem' }}>{bk.property?.title || 'Properti'}</h3>
+                                    {bk.customer && user?.role === 'admin' && (
+                                        <p style={{ color: '#c9a84c', fontSize: '0.8rem', marginBottom: 4 }}>
+                                            👤 {bk.customer.name} — <span style={{ color: 'var(--text-muted)' }}>{bk.customer.email}</span>
+                                        </p>
+                                    )}
                                     <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
                                         {fmtP(bk.total_price)} • Cicilan {bk.installment_tenor || 12} bulan
                                     </p>
