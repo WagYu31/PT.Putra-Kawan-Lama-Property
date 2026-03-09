@@ -274,7 +274,9 @@ function DashboardContent() {
                         <CicilanManager />
                     )}
 
-                    {(activeTab === 'inquiries' || activeTab === 'saved') && (
+                    {activeTab === 'saved' && <FavoritesTab />}
+
+                    {activeTab === 'inquiries' && (
                         <div className={styles.emptyState}>
                             <span className={styles.emptyIcon}>📭</span>
                             <h3>Data Kosong</h3>
@@ -1318,6 +1320,108 @@ function CicilanManager() {
                                     </table>
                                 </div>
                             )}
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
+/* ========== FAVORITES TAB ========== */
+function FavoritesTab() {
+    const { token } = useAuth();
+    const [favorites, setFavorites] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (!token) return;
+        (async () => {
+            try {
+                const res = await fetch('http://localhost:8081/api/favorites', {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setFavorites(data.favorites || []);
+                }
+            } catch (e) { console.error(e); }
+            finally { setLoading(false); }
+        })();
+    }, [token]);
+
+    const removeFavorite = async (propertyId: number) => {
+        if (!token) return;
+        await fetch(`http://localhost:8081/api/favorites/${propertyId}/toggle`, {
+            method: 'POST', headers: { Authorization: `Bearer ${token}` },
+        });
+        setFavorites(prev => prev.filter(f => f.property_id !== propertyId));
+    };
+
+    const fmtPrice = (n: number) => {
+        if (n >= 1e9) return `Rp ${(n / 1e9).toFixed(1)} M`;
+        if (n >= 1e6) return `Rp ${Math.round(n / 1e6)} Juta`;
+        return `Rp ${n.toLocaleString('id-ID')}`;
+    };
+
+    if (loading) return <div style={{ textAlign: 'center', padding: 40 }}>⏳ Memuat favorit...</div>;
+    if (favorites.length === 0) {
+        return (
+            <div className={styles.emptyState}>
+                <span className={styles.emptyIcon}>❤️</span>
+                <h3>Belum Ada Favorit</h3>
+                <p>Klik ikon ❤️ pada properti untuk menambahkan ke favorit.</p>
+            </div>
+        );
+    }
+
+    return (
+        <div>
+            <h2 style={{ marginBottom: 20 }}>❤️ Properti Favorit Saya ({favorites.length})</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
+                {favorites.map(fav => {
+                    const p = fav.property;
+                    if (!p) return null;
+                    const img = p.images?.length > 0 ? `http://localhost:8081${p.images[0]}` : '';
+                    return (
+                        <div key={fav.id} style={{
+                            background: 'var(--bg-card, #1a1f2e)', borderRadius: 12,
+                            border: '1px solid rgba(201,168,76,0.1)', overflow: 'hidden',
+                            transition: 'transform 0.2s', cursor: 'pointer',
+                        }}
+                            onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-4px)')}
+                            onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}>
+                            <div style={{ position: 'relative', height: 180, overflow: 'hidden', background: '#0f1219' }}>
+                                {img ? (
+                                    <img src={img} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                ) : (
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'rgba(255,255,255,0.2)', fontSize: '2rem' }}>🏠</div>
+                                )}
+                                <span style={{
+                                    position: 'absolute', top: 10, left: 10, padding: '3px 10px',
+                                    borderRadius: 6, fontSize: '0.7rem', fontWeight: 600,
+                                    background: p.type === 'sell' ? 'rgba(16,185,129,0.9)' : 'rgba(59,130,246,0.9)',
+                                    color: '#fff',
+                                }}>{p.type === 'sell' ? 'Dijual' : 'Disewa'}</span>
+                                <button onClick={() => removeFavorite(fav.property_id)} style={{
+                                    position: 'absolute', top: 10, right: 10, background: 'rgba(0,0,0,0.5)',
+                                    border: 'none', borderRadius: '50%', width: 36, height: 36,
+                                    cursor: 'pointer', fontSize: '1.1rem', display: 'flex',
+                                    alignItems: 'center', justifyContent: 'center',
+                                }} title="Hapus dari favorit">❤️</button>
+                            </div>
+                            <div style={{ padding: '16px' }}>
+                                <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 4, color: '#fff' }}>{p.title}</h3>
+                                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 8 }}>📍 {p.city}</p>
+                                <p style={{ color: '#c9a84c', fontWeight: 700, fontSize: '1rem' }}>{fmtPrice(p.price)}</p>
+                                {p.bedrooms > 0 && (
+                                    <div style={{ display: 'flex', gap: 12, marginTop: 8, fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>
+                                        <span>🛏 {p.bedrooms}</span>
+                                        <span>🚿 {p.bathrooms}</span>
+                                        <span>📐 {p.land_area} m²</span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     );
                 })}

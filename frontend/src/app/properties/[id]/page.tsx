@@ -251,6 +251,16 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
     const [bookedDates, setBookedDates] = useState<string[]>([]);
     const [property, setProperty] = useState<any>(propertyData[id] || null);
     const [loading, setLoading] = useState(!propertyData[id]);
+    const [isFavorited, setIsFavorited] = useState(false);
+
+    // Check if property is favorited
+    useEffect(() => {
+        const token = localStorage.getItem('pkwl_token');
+        if (!token) return;
+        fetch(`http://localhost:8081/api/favorites/${id}/check`, {
+            headers: { Authorization: `Bearer ${token}` },
+        }).then(r => r.json()).then(d => setIsFavorited(d.is_favorited)).catch(() => { });
+    }, [id]);
 
     // Fetch booked dates for this property
     useEffect(() => {
@@ -479,7 +489,24 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                                     {property.rentPeriod && <span>/{property.rentPeriod}</span>}
                                 </div>
                             </div>
-                            <h1 className={styles.title}>{property.title}</h1>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                <h1 className={styles.title} style={{ flex: 1 }}>{property.title}</h1>
+                                <button onClick={async () => {
+                                    const token = localStorage.getItem('pkwl_token');
+                                    if (!token) { alert('Silakan login terlebih dahulu'); return; }
+                                    await fetch(`http://localhost:8081/api/favorites/${id}/toggle`, {
+                                        method: 'POST', headers: { Authorization: `Bearer ${token}` },
+                                    });
+                                    setIsFavorited(!isFavorited);
+                                }} style={{
+                                    background: 'none', border: '2px solid ' + (isFavorited ? '#ef4444' : 'rgba(255,255,255,0.2)'),
+                                    borderRadius: '50%', width: 44, height: 44, cursor: 'pointer',
+                                    fontSize: '1.3rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    transition: 'all 0.2s', flexShrink: 0,
+                                }} title={isFavorited ? 'Hapus dari favorit' : 'Tambah ke favorit'}>
+                                    {isFavorited ? '❤️' : '🤍'}
+                                </button>
+                            </div>
                             <p className={styles.location}>📍 {property.address}, {property.city}, {property.province}</p>
 
                             <div className={styles.specsGrid}>

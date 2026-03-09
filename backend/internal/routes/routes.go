@@ -151,4 +151,15 @@ func Setup(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 		notifs.PATCH("/:id/read", notifHandler.MarkRead)
 		notifs.PATCH("/read-all", notifHandler.MarkAllRead)
 	}
+
+	// Favorite routes (protected)
+	favoriteHandler := &handlers.FavoriteHandler{DB: db}
+	favs := api.Group("/favorites")
+	favs.Use(middleware.AuthRequired(cfg))
+	{
+		favs.GET("", favoriteHandler.List)
+		favs.POST("/:id/toggle", favoriteHandler.Toggle)
+		favs.GET("/:id/check", favoriteHandler.Check)
+		favs.GET("/ids", favoriteHandler.CheckBulk)
+	}
 }
