@@ -11,12 +11,51 @@ function DashboardContent() {
     const { user, logout, isLoading } = useAuth();
     const router = useRouter();
     const [activeTab, setActiveTab] = useState('overview');
+    const [overviewStats, setOverviewStats] = useState({
+        bookings: 0, properties: 0, users: 0, pendingBookings: 0,
+        favorites: 0, propertiesViewed: 0, messagesSent: 0,
+    });
 
     useEffect(() => {
         if (!isLoading && !user) {
             router.push('/auth/login');
         }
     }, [user, isLoading, router]);
+
+    useEffect(() => {
+        if (!user) return;
+        const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
+        const token = localStorage.getItem('token');
+        const headers: Record<string, string> = { 'Authorization': `Bearer ${token}` };
+        const fetchStats = async () => {
+            try {
+                const bRes = await fetch(`${API}/api/bookings`, { headers });
+                if (bRes.ok) {
+                    const bData = await bRes.json();
+                    const bookings = bData.bookings || [];
+                    const pendingBookings = bookings.filter((b: { status: string }) => b.status === 'pending').length;
+                    setOverviewStats(prev => ({ ...prev, bookings: bookings.length, pendingBookings }));
+                }
+                const pRes = await fetch(`${API}/api/properties`);
+                if (pRes.ok) {
+                    const pData = await pRes.json();
+                    const properties = pData.properties || [];
+                    setOverviewStats(prev => ({ ...prev, properties: properties.length, propertiesViewed: properties.length }));
+                }
+                if (user.role === 'admin') {
+                    const uRes = await fetch(`${API}/api/users`, { headers });
+                    if (uRes.ok) {
+                        const uData = await uRes.json();
+                        const users = uData.users || [];
+                        setOverviewStats(prev => ({ ...prev, users: users.length }));
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to fetch stats:', err);
+            }
+        };
+        fetchStats();
+    }, [user]);
 
     if (isLoading || !user) return <div className={styles.loading}>Loading...</div>;
 
@@ -89,20 +128,20 @@ function DashboardContent() {
                     {activeTab === 'overview' && (
                         <div className={styles.overviewGrid}>
                             {(user.role === 'admin' ? [
-                                { label: 'Total Properti', value: '6', icon: '🏠', color: '#c9a84c' },
-                                { label: 'Total Users', value: '3', icon: '👥', color: '#3b82f6' },
-                                { label: 'Booking Pending', value: '0', icon: '📋', color: '#f59e0b' },
-                                { label: 'Live Chat', value: '0', icon: '💬', color: '#10b981' },
+                                { label: 'Total Properti', value: String(overviewStats.properties), icon: '🏠', color: '#c9a84c' },
+                                { label: 'Total Users', value: String(overviewStats.users), icon: '👥', color: '#3b82f6' },
+                                { label: 'Booking Pending', value: String(overviewStats.pendingBookings), icon: '📋', color: '#f59e0b' },
+                                { label: 'Total Booking', value: String(overviewStats.bookings), icon: '💬', color: '#10b981' },
                             ] : user.role === 'owner' ? [
-                                { label: 'Properti Saya', value: '6', icon: '🏠', color: '#c9a84c' },
-                                { label: 'Booking Masuk', value: '0', icon: '📋', color: '#3b82f6' },
-                                { label: 'Total Views', value: '0', icon: '👁', color: '#10b981' },
-                                { label: 'Pendapatan', value: 'Rp 0', icon: '💰', color: '#f59e0b' },
+                                { label: 'Properti Saya', value: String(overviewStats.properties), icon: '🏠', color: '#c9a84c' },
+                                { label: 'Booking Masuk', value: String(overviewStats.bookings), icon: '📋', color: '#3b82f6' },
+                                { label: 'Total Properti', value: String(overviewStats.properties), icon: '👁', color: '#10b981' },
+                                { label: 'Booking Pending', value: String(overviewStats.pendingBookings), icon: '💰', color: '#f59e0b' },
                             ] : [
-                                { label: 'Booking Saya', value: '0', icon: '📋', color: '#3b82f6' },
-                                { label: 'Favorit', value: '0', icon: '❤️', color: '#ef4444' },
-                                { label: 'Properti Dilihat', value: '0', icon: '👁', color: '#10b981' },
-                                { label: 'Pesan Terkirim', value: '0', icon: '💬', color: '#c9a84c' },
+                                { label: 'Booking Saya', value: String(overviewStats.bookings), icon: '📋', color: '#3b82f6' },
+                                { label: 'Favorit', value: String(overviewStats.favorites), icon: '❤️', color: '#ef4444' },
+                                { label: 'Properti Tersedia', value: String(overviewStats.propertiesViewed), icon: '👁', color: '#10b981' },
+                                { label: 'Pesan Terkirim', value: String(overviewStats.messagesSent), icon: '💬', color: '#c9a84c' },
                             ]).map((s, i) => (
                                 <div key={i} className={styles.statCard}>
                                     <div className={styles.statIcon} style={{ background: `${s.color}15`, color: s.color }}>{s.icon}</div>
