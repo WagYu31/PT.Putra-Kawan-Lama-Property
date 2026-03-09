@@ -138,8 +138,8 @@ func Setup(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	// Dashboard stats (admin)
 	api.GET("/dashboard/stats", middleware.AuthRequired(cfg), middleware.RoleRequired(models.RoleAdmin), userHandler.GetDashboardStats)
 
-	// Invoice routes (protected)
-	api.GET("/payments/:id/invoice", middleware.AuthRequired(cfg), invoiceHandler.GenerateInvoice)
+	// Invoice routes
+	api.GET("/payments/:id/invoice", invoiceHandler.GenerateInvoice) // public for browser tabs
 	api.GET("/payments/:id/invoice-json", middleware.AuthRequired(cfg), invoiceHandler.GetInvoiceJSON)
 
 	// Notification routes (protected)

@@ -38,20 +38,13 @@ func formatRupiah(amount float64) string {
 }
 
 // GenerateInvoice returns a printable HTML invoice for a payment
+// This endpoint is public (no auth) so it can be opened directly in a browser tab.
 func (h *InvoiceHandler) GenerateInvoice(c *gin.Context) {
 	paymentID := c.Param("id")
-	userID, _ := c.Get("userID")
-	userRole, _ := c.Get("userRole")
 
 	var payment models.Payment
 	if err := h.DB.Preload("Booking.Property").Preload("Booking.Customer").First(&payment, paymentID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Payment not found"})
-		return
-	}
-
-	// Only allow owner or admin
-	if userRole.(models.Role) == models.RoleCustomer && payment.Booking.CustomerID != userID.(uint) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Not your payment"})
 		return
 	}
 
