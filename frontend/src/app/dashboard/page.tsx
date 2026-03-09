@@ -1398,9 +1398,10 @@ function FavoritesTab() {
                         }
                         return fallbackImages[p.category] || fallbackImages.house;
                     };
+                    const fallback = fallbackImages[p.category] || fallbackImages.house;
                     const img = getImg();
                     return (
-                        <div key={fav.id} style={{
+                        <div key={fav.id} onClick={() => window.open(`/properties/${fav.property_id}`, '_blank')} style={{
                             background: 'var(--bg-card, #1a1f2e)', borderRadius: 12,
                             border: '1px solid rgba(201,168,76,0.1)', overflow: 'hidden',
                             transition: 'transform 0.2s', cursor: 'pointer',
@@ -1408,18 +1409,15 @@ function FavoritesTab() {
                             onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-4px)')}
                             onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}>
                             <div style={{ position: 'relative', height: 180, overflow: 'hidden', background: '#0f1219' }}>
-                                {img ? (
-                                    <img src={img} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                ) : (
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'rgba(255,255,255,0.2)', fontSize: '2rem' }}>🏠</div>
-                                )}
+                                <img src={img} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    onError={(e) => { (e.target as HTMLImageElement).src = fallback; }} />
                                 <span style={{
                                     position: 'absolute', top: 10, left: 10, padding: '3px 10px',
                                     borderRadius: 6, fontSize: '0.7rem', fontWeight: 600,
                                     background: p.type === 'sell' ? 'rgba(16,185,129,0.9)' : 'rgba(59,130,246,0.9)',
                                     color: '#fff',
                                 }}>{p.type === 'sell' ? 'Dijual' : 'Disewa'}</span>
-                                <button onClick={() => removeFavorite(fav.property_id)} style={{
+                                <button onClick={(e) => { e.stopPropagation(); removeFavorite(fav.property_id); }} style={{
                                     position: 'absolute', top: 10, right: 10, background: 'rgba(0,0,0,0.5)',
                                     border: 'none', borderRadius: '50%', width: 36, height: 36,
                                     cursor: 'pointer', fontSize: '1.1rem', display: 'flex',
