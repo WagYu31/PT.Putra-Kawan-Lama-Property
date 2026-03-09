@@ -15,6 +15,8 @@ function DashboardContent() {
         bookings: 0, properties: 0, users: 0, pendingBookings: 0,
         favorites: 0, propertiesViewed: 0, messagesSent: 0,
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [recentBookings, setRecentBookings] = useState<any[]>([]);
 
     useEffect(() => {
         if (!isLoading && !user) {
@@ -35,6 +37,7 @@ function DashboardContent() {
                     const bookings = bData.bookings || [];
                     const pendingBookings = bookings.filter((b: { status: string }) => b.status === 'pending').length;
                     setOverviewStats(prev => ({ ...prev, bookings: bookings.length, pendingBookings }));
+                    setRecentBookings(bookings.slice(0, 5));
                 }
                 const pRes = await fetch(`${API}/api/properties`);
                 if (pRes.ok) {
@@ -126,31 +129,113 @@ function DashboardContent() {
 
                 <div className={styles.content}>
                     {activeTab === 'overview' && (
-                        <div className={styles.overviewGrid}>
-                            {(user.role === 'admin' ? [
-                                { label: 'Total Properti', value: String(overviewStats.properties), icon: '🏠', color: '#c9a84c' },
-                                { label: 'Total Users', value: String(overviewStats.users), icon: '👥', color: '#3b82f6' },
-                                { label: 'Booking Pending', value: String(overviewStats.pendingBookings), icon: '📋', color: '#f59e0b' },
-                                { label: 'Total Booking', value: String(overviewStats.bookings), icon: '💬', color: '#10b981' },
-                            ] : user.role === 'owner' ? [
-                                { label: 'Properti Saya', value: String(overviewStats.properties), icon: '🏠', color: '#c9a84c' },
-                                { label: 'Booking Masuk', value: String(overviewStats.bookings), icon: '📋', color: '#3b82f6' },
-                                { label: 'Total Properti', value: String(overviewStats.properties), icon: '👁', color: '#10b981' },
-                                { label: 'Booking Pending', value: String(overviewStats.pendingBookings), icon: '💰', color: '#f59e0b' },
-                            ] : [
-                                { label: 'Booking Saya', value: String(overviewStats.bookings), icon: '📋', color: '#3b82f6' },
-                                { label: 'Favorit', value: String(overviewStats.favorites), icon: '❤️', color: '#ef4444' },
-                                { label: 'Properti Tersedia', value: String(overviewStats.propertiesViewed), icon: '👁', color: '#10b981' },
-                                { label: 'Pesan Terkirim', value: String(overviewStats.messagesSent), icon: '💬', color: '#c9a84c' },
-                            ]).map((s, i) => (
-                                <div key={i} className={styles.statCard}>
-                                    <div className={styles.statIcon} style={{ background: `${s.color}15`, color: s.color }}>{s.icon}</div>
-                                    <div>
-                                        <p className={styles.statValue}>{s.value}</p>
-                                        <p className={styles.statLabel}>{s.label}</p>
+                        <div>
+                            {/* Stats Cards */}
+                            <div className={styles.overviewGrid}>
+                                {(user.role === 'admin' ? [
+                                    { label: 'Total Properti', value: String(overviewStats.properties), icon: '🏠', color: '#c9a84c' },
+                                    { label: 'Total Users', value: String(overviewStats.users), icon: '👥', color: '#3b82f6' },
+                                    { label: 'Booking Pending', value: String(overviewStats.pendingBookings), icon: '📋', color: '#f59e0b' },
+                                    { label: 'Total Booking', value: String(overviewStats.bookings), icon: '💬', color: '#10b981' },
+                                ] : user.role === 'owner' ? [
+                                    { label: 'Properti Saya', value: String(overviewStats.properties), icon: '🏠', color: '#c9a84c' },
+                                    { label: 'Booking Masuk', value: String(overviewStats.bookings), icon: '📋', color: '#3b82f6' },
+                                    { label: 'Total Properti', value: String(overviewStats.properties), icon: '👁', color: '#10b981' },
+                                    { label: 'Booking Pending', value: String(overviewStats.pendingBookings), icon: '💰', color: '#f59e0b' },
+                                ] : [
+                                    { label: 'Booking Saya', value: String(overviewStats.bookings), icon: '📋', color: '#3b82f6' },
+                                    { label: 'Favorit', value: String(overviewStats.favorites), icon: '❤️', color: '#ef4444' },
+                                    { label: 'Properti Tersedia', value: String(overviewStats.propertiesViewed), icon: '👁', color: '#10b981' },
+                                    { label: 'Pesan Terkirim', value: String(overviewStats.messagesSent), icon: '💬', color: '#c9a84c' },
+                                ]).map((s, i) => (
+                                    <div key={i} className={styles.statCard}>
+                                        <div className={styles.statIcon} style={{ background: `${s.color}15`, color: s.color }}>{s.icon}</div>
+                                        <div>
+                                            <p className={styles.statValue}>{s.value}</p>
+                                            <p className={styles.statLabel}>{s.label}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Two Column Layout */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem', marginTop: '1.5rem' }}>
+                                {/* Recent Bookings */}
+                                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '1.5rem' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                        <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#fff' }}>📋 Booking Terbaru</h3>
+                                        <button onClick={() => setActiveTab('bookings')} style={{ background: 'none', border: 'none', color: '#c9a84c', cursor: 'pointer', fontSize: '0.85rem' }}>Lihat Semua →</button>
+                                    </div>
+                                    {recentBookings.length > 0 ? (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                            {recentBookings.map((b: { id: number; booking_type: string; status: string; property?: { title: string }; created_at: string; total_price?: number; payment_method?: string }) => (
+                                                <div key={b.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.85rem 1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                                        <span style={{ fontSize: '1.3rem' }}>{b.booking_type === 'survey' ? '🔍' : b.booking_type === 'purchase' ? '🏠' : '📝'}</span>
+                                                        <div>
+                                                            <p style={{ fontWeight: 500, color: '#fff', fontSize: '0.9rem' }}>{b.property?.title || 'Properti'}</p>
+                                                            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem' }}>
+                                                                {b.booking_type === 'survey' ? 'Survey' : b.booking_type === 'purchase' ? (b.payment_method === 'installment' ? 'Pembelian Cicilan' : 'Pembelian Cash') : 'Sewa'}
+                                                                {' · '}{new Date(b.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ textAlign: 'right' }}>
+                                                        <span style={{
+                                                            padding: '3px 10px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 600,
+                                                            background: b.status === 'completed' ? 'rgba(16,185,129,0.15)' : b.status === 'confirmed' ? 'rgba(59,130,246,0.15)' : b.status === 'cancelled' ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)',
+                                                            color: b.status === 'completed' ? '#10b981' : b.status === 'confirmed' ? '#3b82f6' : b.status === 'cancelled' ? '#ef4444' : '#f59e0b'
+                                                        }}>
+                                                            {b.status === 'completed' ? '✅ Selesai' : b.status === 'confirmed' ? '✅ Dikonfirmasi' : b.status === 'cancelled' ? '❌ Dibatalkan' : '⏳ Pending'}
+                                                        </span>
+                                                        {b.total_price ? <p style={{ color: '#c9a84c', fontSize: '0.8rem', marginTop: '4px', fontWeight: 600 }}>Rp {(b.total_price / 1e9).toFixed(1)} M</p> : null}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div style={{ textAlign: 'center', padding: '2rem', color: 'rgba(255,255,255,0.3)' }}>
+                                            <p style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📋</p>
+                                            <p>Belum ada booking</p>
+                                            <button onClick={() => router.push('/properties')} style={{ marginTop: '0.75rem', padding: '8px 16px', background: '#c9a84c', color: '#000', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>Jelajahi Properti</button>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Quick Actions & Info */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                                    {/* Quick Actions */}
+                                    <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '1.5rem' }}>
+                                        <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#fff', marginBottom: '1rem' }}>⚡ Aksi Cepat</h3>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                            <button onClick={() => router.push('/properties')} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.15)', borderRadius: '10px', color: '#c9a84c', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, textAlign: 'left' }}>
+                                                🏠 Cari Properti
+                                            </button>
+                                            <button onClick={() => setActiveTab('bookings')} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.15)', borderRadius: '10px', color: '#3b82f6', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, textAlign: 'left' }}>
+                                                📋 Lihat Booking
+                                            </button>
+                                            {user.role !== 'customer' && (
+                                                <button onClick={() => setActiveTab('properties')} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)', borderRadius: '10px', color: '#10b981', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, textAlign: 'left' }}>
+                                                    ➕ Kelola Properti
+                                                </button>
+                                            )}
+                                            <button onClick={() => setActiveTab('payments')} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.15)', borderRadius: '10px', color: '#f59e0b', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, textAlign: 'left' }}>
+                                                💰 Pembayaran
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Info Card */}
+                                    <div style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.1), rgba(201,168,76,0.03))', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '16px', padding: '1.5rem' }}>
+                                        <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#c9a84c', marginBottom: '0.75rem' }}>💡 Tips</h3>
+                                        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                            <li style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>• Jadwalkan survey terlebih dahulu sebelum membeli</li>
+                                            <li style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>• Cicilan tersedia untuk tenor 3, 6, atau 12 bulan</li>
+                                            <li style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>• Pantau status pembayaran di menu Pembayaran</li>
+                                        </ul>
                                     </div>
                                 </div>
-                            ))}
+                            </div>
                         </div>
                     )}
 
