@@ -2,7 +2,21 @@
     background: var(--bg-secondary);
     border-top: 1px solid var(--border-color);
     border-bottom: 1px solid var(--border-color);
-    padding: 60px 0;
+    padding: 70px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.stats::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(201, 168, 76, 0.04), transparent 70%);
+    pointer-events: none;
 }
 
 .statsGrid {
@@ -16,39 +30,60 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
-    padding: 24px;
+    padding: 28px 20px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid transparent;
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
     animation: fadeInUp 0.6s ease-out both;
 }
 
+.statItem:hover {
+    background: rgba(201, 168, 76, 0.04);
+    border-color: rgba(201, 168, 76, 0.15);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(201, 168, 76, 0.08);
+}
+
 .statIcon {
-    font-size: 2rem;
-    margin-bottom: 12px;
+    font-size: 2.2rem;
+    margin-bottom: 14px;
+    display: inline-block;
+    animation: floatY 3s ease-in-out infinite;
 }
 
 .statValue {
     font-family: var(--font-display);
-    font-size: 2.5rem;
+    font-size: 2.8rem;
     font-weight: 700;
-    color: var(--gold-primary);
+    background: linear-gradient(135deg, var(--gold-light), var(--gold-primary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     line-height: 1;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
 }
 
 .statLabel {
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     color: var(--text-secondary);
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
+    font-weight: 500;
 }
 
 @media (max-width: 768px) {
     .statsGrid {
         grid-template-columns: repeat(2, 1fr);
-        gap: 24px;
+        gap: 20px;
     }
 
     .statValue {
         font-size: 2rem;
+    }
+
+    .statItem {
+        padding: 20px 16px;
     }
 }
 

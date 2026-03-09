@@ -8,8 +8,32 @@
 .bgGlow {
     position: absolute;
     inset: 0;
-    background: radial-gradient(ellipse at center, rgba(201, 168, 76, 0.06) 0%, transparent 70%);
+    background: radial-gradient(ellipse at center, rgba(201, 168, 76, 0.08) 0%, transparent 60%),
+        radial-gradient(ellipse at 30% 80%, rgba(59, 130, 246, 0.04) 0%, transparent 50%);
     z-index: 0;
+    animation: gradientShift 8s ease-in-out infinite;
+    background-size: 200% 200%;
+}
+
+/* Animated border lines */
+.cta::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(201, 168, 76, 0.3), transparent);
+}
+
+.cta::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(201, 168, 76, 0.3), transparent);
 }
 
 .ctaContent {

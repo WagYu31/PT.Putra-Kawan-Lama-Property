@@ -1,11 +1,29 @@
+'use client';
+import { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import styles from './CTASection.module.css';
 
 export default function CTASection() {
+    const ref = useRef<HTMLDivElement>(null);
+    const [visible, setVisible] = useState(false);
+
+    useEffect(() => {
+        const obs = new IntersectionObserver(
+            ([e]) => { if (e.isIntersecting) setVisible(true); },
+            { threshold: 0.3 }
+        );
+        if (ref.current) obs.observe(ref.current);
+        return () => obs.disconnect();
+    }, []);
+
     return (
-        <section className={styles.cta}>
+        <section className={styles.cta} ref={ref}>
             <div className={styles.bgGlow} />
-            <div className={`container ${styles.ctaContent}`}>
+            <div className={`container ${styles.ctaContent}`} style={{
+                opacity: visible ? 1 : 0,
+                transform: visible ? 'translateY(0) scale(1)' : 'translateY(30px) scale(0.97)',
+                transition: 'all 0.8s cubic-bezier(0.16,1,0.3,1)',
+            }}>
                 <span className="section-label">Siap Memulai?</span>
                 <h2 className={styles.ctaTitle}>
                     Temukan Properti <span className="gold-text">Impian Anda</span> Sekarang
@@ -14,7 +32,11 @@ export default function CTASection() {
                     Hubungi tim profesional kami untuk konsultasi gratis. Kami siap membantu Anda
                     menemukan properti yang sempurna sesuai kebutuhan dan budget Anda.
                 </p>
-                <div className={styles.ctaActions}>
+                <div className={styles.ctaActions} style={{
+                    opacity: visible ? 1 : 0,
+                    transform: visible ? 'translateY(0)' : 'translateY(20px)',
+                    transition: 'all 0.8s cubic-bezier(0.16,1,0.3,1) 0.2s',
+                }}>
                     <Link href="/properties" className="btn btn-primary btn-lg">
                         Jelajahi Properti
                     </Link>

@@ -1,5 +1,29 @@
 .facilities {
     background: var(--bg-secondary);
+    position: relative;
+    overflow: hidden;
+}
+
+.facilities::before {
+    content: '';
+    position: absolute;
+    top: -200px;
+    right: -200px;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(201, 168, 76, 0.04), transparent 70%);
+    pointer-events: none;
+}
+
+.facilities::after {
+    content: '';
+    position: absolute;
+    bottom: -200px;
+    left: -200px;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.03), transparent 70%);
+    pointer-events: none;
 }
 
 .header {
@@ -20,36 +44,68 @@
 .facilityCard {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 14px;
-    padding: 32px 24px;
+    border-radius: 16px;
+    padding: 36px 24px;
     text-align: center;
-    transition: all var(--transition-base);
+    transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
     animation: fadeInUp 0.6s ease-out both;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Gradient border effect on hover */
+.facilityCard::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(201, 168, 76, 0), rgba(201, 168, 76, 0.3), rgba(201, 168, 76, 0));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.4s;
 }
 
 .facilityCard:hover {
-    border-color: var(--gold-primary);
-    transform: translateY(-6px);
-    box-shadow: var(--shadow-gold);
+    border-color: transparent;
+    transform: translateY(-8px);
+    box-shadow: 0 16px 48px rgba(201, 168, 76, 0.1), 0 8px 24px rgba(0, 0, 0, 0.2);
+    background: rgba(17, 26, 46, 0.9);
+}
+
+.facilityCard:hover::before {
+    opacity: 1;
 }
 
 .facilityIcon {
-    font-size: 2.5rem;
-    display: block;
-    margin-bottom: 16px;
+    font-size: 2.8rem;
+    display: inline-block;
+    margin-bottom: 18px;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.facilityCard:hover .facilityIcon {
+    transform: scale(1.15) translateY(-4px);
 }
 
 .facilityCard h3 {
     font-size: 1rem;
     font-weight: 600;
     color: var(--text-primary);
-    margin-bottom: 8px;
+    margin-bottom: 10px;
+    transition: color 0.3s;
+}
+
+.facilityCard:hover h3 {
+    color: var(--gold-primary);
 }
 
 .facilityCard p {
     font-size: 0.85rem;
     color: var(--text-secondary);
-    line-height: 1.6;
+    line-height: 1.7;
 }
 
 @media (max-width: 1024px) {
