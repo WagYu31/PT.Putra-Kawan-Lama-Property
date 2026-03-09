@@ -131,6 +131,23 @@ func Setup(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 		users.DELETE("/:id", userHandler.Delete)
 	}
 
+	invoiceHandler := &handlers.InvoiceHandler{DB: db}
+	notifHandler := &handlers.NotificationHandler{DB: db}
+
 	// Dashboard stats (admin)
 	api.GET("/dashboard/stats", middleware.AuthRequired(cfg), middleware.RoleRequired(models.RoleAdmin), userHandler.GetDashboardStats)
+
+	// Invoice routes (protected)
+	api.GET("/payments/:id/invoice", middleware.AuthRequired(cfg), invoiceHandler.GenerateInvoice)
+	api.GET("/payments/:id/invoice-json", middleware.AuthRequired(cfg), invoiceHandler.GetInvoiceJSON)
+
+	// Notification routes (protected)
+	notifs := api.Group("/notifications")
+	notifs.Use(middleware.AuthRequired(cfg))
+	{
+		notifs.GET("", notifHandler.List)
+		notifs.GET("/unread-count", notifHandler.UnreadCount)
+		notifs.PATCH("/:id/read", notifHandler.MarkRead)
+		notifs.PATCH("/read-all", notifHandler.MarkAllRead)
+	}
 }

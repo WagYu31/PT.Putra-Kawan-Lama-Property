@@ -124,7 +124,10 @@ function DashboardContent() {
                     <h1>
                         {activeTab === 'overview' ? `Halo, ${user.name}!` : menuItems.find(m => m.key === activeTab)?.label}
                     </h1>
-                    <Link href="/" className="btn btn-ghost btn-sm">← Ke Website</Link>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <NotificationBell />
+                        <Link href="/" className="btn btn-ghost btn-sm">← Ke Website</Link>
+                    </div>
                 </header>
 
                 <div className={styles.content}>
@@ -1287,6 +1290,13 @@ function CicilanManager() {
                                                             {isPaid && p.paid_at && (
                                                                 <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{fmtD(p.paid_at)}</span>
                                                             )}
+                                                            {isPaid && (
+                                                                <a href={`http://localhost:8081/api/payments/${p.id}/invoice`}
+                                                                    target="_blank" rel="noopener noreferrer"
+                                                                    style={{ display: 'inline-block', marginLeft: 8, padding: '3px 10px', background: 'rgba(201,168,76,0.15)', color: '#c9a84c', borderRadius: 6, fontSize: '0.75rem', textDecoration: 'none', fontWeight: 600 }}>
+                                                                    📄 Invoice
+                                                                </a>
+                                                            )}
                                                         </td>
                                                     </tr>
                                                 );
@@ -1299,6 +1309,96 @@ function CicilanManager() {
                     );
                 })}
             </div>
+        </div>
+    );
+}
+
+function NotificationBell() {
+    const { token } = useAuth();
+    const [notifs, setNotifs] = useState<{ id: number; title: string; message: string; type: string; is_read: boolean; created_at: string }[]>([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [showPanel, setShowPanel] = useState(false);
+
+    useEffect(() => {
+        if (!token) return;
+        const API = 'http://localhost:8081';
+        const headers = { Authorization: `Bearer ${token}` };
+        const fetchNotifs = async () => {
+            try {
+                const [nRes, cRes] = await Promise.all([
+                    fetch(`${API}/api/notifications`, { headers }),
+                    fetch(`${API}/api/notifications/unread-count`, { headers }),
+                ]);
+                if (nRes.ok) { const d = await nRes.json(); setNotifs(d.notifications || []); }
+                if (cRes.ok) { const d = await cRes.json(); setUnreadCount(d.count || 0); }
+            } catch (e) { console.error(e); }
+        };
+        fetchNotifs();
+        const interval = setInterval(fetchNotifs, 15000);
+        return () => clearInterval(interval);
+    }, [token]);
+
+    const markAllRead = async () => {
+        if (!token) return;
+        await fetch('http://localhost:8081/api/notifications/read-all', {
+            method: 'PATCH', headers: { Authorization: `Bearer ${token}` },
+        });
+        setUnreadCount(0);
+        setNotifs(prev => prev.map(n => ({ ...n, is_read: true })));
+    };
+
+    return (
+        <div style={{ position: 'relative' }}>
+            <button onClick={() => setShowPanel(!showPanel)} style={{
+                background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.3rem',
+                position: 'relative', padding: '4px 8px',
+            }}>
+                🔔
+                {unreadCount > 0 && (
+                    <span style={{
+                        position: 'absolute', top: -2, right: -2, background: '#ef4444', color: '#fff',
+                        borderRadius: '50%', width: 18, height: 18, fontSize: '0.65rem', fontWeight: 700,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>{unreadCount > 9 ? '9+' : unreadCount}</span>
+                )}
+            </button>
+            {showPanel && (
+                <div style={{
+                    position: 'absolute', top: '100%', right: 0, width: 360, maxHeight: 420,
+                    background: '#1a1f2e', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 12,
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.3)', zIndex: 1000, overflow: 'hidden',
+                }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                        <h4 style={{ fontSize: '0.95rem', fontWeight: 600, color: '#fff' }}>🔔 Notifikasi</h4>
+                        {unreadCount > 0 && (
+                            <button onClick={markAllRead} style={{ background: 'none', border: 'none', color: '#c9a84c', cursor: 'pointer', fontSize: '0.75rem' }}>Tandai semua dibaca</button>
+                        )}
+                    </div>
+                    <div style={{ overflowY: 'auto', maxHeight: 350 }}>
+                        {notifs.length === 0 ? (
+                            <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>
+                                <p style={{ fontSize: '1.5rem', marginBottom: 4 }}>🔕</p>
+                                <p style={{ fontSize: '0.85rem' }}>Belum ada notifikasi</p>
+                            </div>
+                        ) : notifs.map(n => (
+                            <div key={n.id} style={{
+                                padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.03)',
+                                background: n.is_read ? 'transparent' : 'rgba(201,168,76,0.05)',
+                                cursor: 'default',
+                            }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                    <p style={{ fontSize: '0.85rem', fontWeight: n.is_read ? 400 : 600, color: '#fff', marginBottom: 4 }}>{n.title}</p>
+                                    {!n.is_read && <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#c9a84c', flexShrink: 0, marginTop: 4 }} />}
+                                </div>
+                                <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.4 }}>{n.message}</p>
+                                <p style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.25)', marginTop: 4 }}>
+                                    {new Date(n.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

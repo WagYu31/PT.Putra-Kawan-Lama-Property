@@ -17,6 +17,13 @@ type Config struct {
 	MidtransServerKey    string
 	MidtransClientKey    string
 	MidtransIsProduction bool
+
+	// SMTP (Email)
+	SMTPHost string
+	SMTPPort string
+	SMTPUser string
+	SMTPPass string
+	SMTPFrom string
 }
 
 func Load() *Config {
@@ -34,6 +41,12 @@ func Load() *Config {
 		MidtransServerKey:    getEnv("MIDTRANS_SERVER_KEY", "SB-Mid-server-YOUR_KEY_HERE"),
 		MidtransClientKey:    getEnv("MIDTRANS_CLIENT_KEY", "SB-Mid-client-YOUR_KEY_HERE"),
 		MidtransIsProduction: getEnv("MIDTRANS_IS_PRODUCTION", "false") == "true",
+
+		SMTPHost: getEnv("SMTP_HOST", ""),
+		SMTPPort: getEnv("SMTP_PORT", "587"),
+		SMTPUser: getEnv("SMTP_USER", ""),
+		SMTPPass: getEnv("SMTP_PASS", ""),
+		SMTPFrom: getEnv("SMTP_FROM", ""),
 	}
 }
 

@@ -440,6 +440,48 @@ func (h *PaymentHandler) HandleNotification(c *gin.Context) {
 		}
 	}
 
+	// === Auto-create notification & send email on payment success ===
+	if payment.Status == models.PaymentPaid {
+		var booking models.Booking
+		h.DB.Preload("Property").Preload("Customer").First(&booking, payment.BookingID)
+
+		// Payment label
+		paymentLabel := "Pembayaran"
+		if payment.BillingPeriod == 0 && payment.PaymentType == models.PaymentTypeInstallment {
+			paymentLabel = "Uang Muka (DP)"
+		} else if payment.PaymentType == models.PaymentTypeInstallment {
+			paymentLabel = fmt.Sprintf("Cicilan ke-%d", payment.BillingPeriod)
+		} else if payment.PaymentType == models.PaymentTypeCash {
+			paymentLabel = "Pembayaran Cash"
+		}
+
+		// Format amount
+		amountStr := fmt.Sprintf("Rp %.0f", payment.Amount)
+		invoiceNo := fmt.Sprintf("INV-%05d-%s", payment.ID, payment.CreatedAt.Format("20060102"))
+
+		// Create in-app notification
+		notifTitle := fmt.Sprintf("✅ %s Berhasil", paymentLabel)
+		notifMsg := fmt.Sprintf("%s untuk properti %s sebesar %s telah berhasil diproses.",
+			paymentLabel, booking.Property.Title, amountStr)
+		bookingID := booking.ID
+		CreateNotification(h.DB, booking.CustomerID, notifTitle, notifMsg, models.NotifPaymentSuccess, &bookingID)
+
+		// Also notify admin
+		var admins []models.User
+		h.DB.Where("role = ?", models.RoleAdmin).Find(&admins)
+		for _, admin := range admins {
+			adminMsg := fmt.Sprintf("%s oleh %s untuk properti %s sebesar %s.",
+				paymentLabel, booking.Customer.Name, booking.Property.Title, amountStr)
+			CreateNotification(h.DB, admin.ID, "💰 Pembayaran Masuk", adminMsg, models.NotifPaymentSuccess, &bookingID)
+		}
+
+		// Send email (async, won't block response)
+		go SendPaymentSuccessEmail(h.Cfg, booking.Customer.Name, booking.Customer.Email,
+			booking.Property.Title, paymentLabel, amountStr, invoiceNo)
+
+		log.Printf("🔔 Notification created & email queued for user %d", booking.CustomerID)
+	}
+
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
