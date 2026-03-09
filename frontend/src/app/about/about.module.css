@@ -1,0 +1,106 @@
+.page {
+    padding-top: var(--nav-height);
+}
+
+.hero {
+    padding: 60px 0 40px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.title {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.subtitle {
+    color: var(--text-secondary);
+    font-size: 1.05rem;
+    max-width: 500px;
+}
+
+.storyGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+}
+
+.storyContent p {
+    color: var(--text-secondary);
+    line-height: 1.8;
+    margin-bottom: 16px;
+    font-size: 1rem;
+}
+
+.storyImage {
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.storyImage img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.values {
+    background: var(--bg-secondary);
+}
+
+.valuesHeader {
+    text-align: center;
+    margin-bottom: 48px;
+}
+
+.valuesGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+.valueCard {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 32px;
+    text-align: center;
+    transition: all var(--transition-base);
+}
+
+.valueCard:hover {
+    border-color: var(--gold-primary);
+    transform: translateY(-4px);
+}
+
+.valueIcon {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 16px;
+}
+
+.valueCard h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.valueCard p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+    .storyGrid {
+        grid-template-columns: 1fr;
+        gap: 32px;
+    }
+
+    .valuesGrid {
+        grid-template-columns: 1fr;
+    }
+}

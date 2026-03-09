@@ -1,0 +1,280 @@
+.hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    padding-top: var(--nav-height);
+}
+
+.bgOverlay {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(201, 168, 76, 0.08) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
+        var(--bg-primary);
+    z-index: 0;
+}
+
+.bgPattern {
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(201, 168, 76, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201, 168, 76, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    z-index: 0;
+}
+
+.heroContent {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+    padding: 60px 20px;
+}
+
+.heroText {
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.label {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold-primary);
+    margin-bottom: 20px;
+    padding: 6px 16px;
+    border: 1px solid rgba(201, 168, 76, 0.2);
+    border-radius: 50px;
+}
+
+.title {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 700;
+    line-height: 1.15;
+    margin-bottom: 24px;
+    color: var(--text-primary);
+}
+
+.subtitle {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    line-height: 1.8;
+    margin-bottom: 40px;
+    max-width: 480px;
+}
+
+.heroCTA {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 50px;
+}
+
+.heroMeta {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+.metaItem {
+    display: flex;
+    flex-direction: column;
+}
+
+.metaValue {
+    font-family: var(--font-display);
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--gold-primary);
+}
+
+.metaLabel {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 2px;
+}
+
+.metaDivider {
+    width: 1px;
+    height: 40px;
+    background: var(--border-color);
+}
+
+/* Hero Search Card */
+.heroVisual {
+    display: flex;
+    justify-content: flex-end;
+    animation: fadeInUp 0.8s ease-out 0.2s both;
+}
+
+.heroCard {
+    position: relative;
+    width: 100%;
+    max-width: 440px;
+}
+
+.cardGlow {
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(135deg, rgba(201, 168, 76, 0.3), transparent, rgba(201, 168, 76, 0.1));
+    border-radius: 18px;
+    z-index: -1;
+    filter: blur(1px);
+}
+
+.cardInner {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 36px;
+    backdrop-filter: blur(10px);
+}
+
+.searchBox h3 {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    margin-bottom: 24px;
+    color: var(--text-primary);
+}
+
+.searchGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.searchField label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.searchBtn {
+    width: 100%;
+}
+
+/* Slide indicators */
+.slideIndicators {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 2;
+}
+
+.indicator {
+    width: 32px;
+    height: 3px;
+    background: var(--text-muted);
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+    border-radius: 2px;
+}
+
+.indicator.active {
+    width: 48px;
+    background: var(--gold-primary);
+}
+
+/* Scroll down */
+.scrollDown {
+    position: absolute;
+    bottom: 40px;
+    right: 40px;
+    color: var(--text-muted);
+    animation: bounce 2s infinite;
+    z-index: 2;
+}
+
+@keyframes bounce {
+
+    0%,
+    20%,
+    50%,
+    80%,
+    100% {
+        transform: translateY(0);
+    }
+
+    40% {
+        transform: translateY(-10px);
+    }
+
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+    .heroContent {
+        grid-template-columns: 1fr;
+        gap: 40px;
+        text-align: center;
+    }
+
+    .subtitle {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .heroCTA {
+        justify-content: center;
+    }
+
+    .heroMeta {
+        justify-content: center;
+    }
+
+    .heroVisual {
+        justify-content: center;
+    }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .hero {
+        padding-top: 100px;
+    }
+
+    .heroCTA {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .heroMeta {
+        gap: 20px;
+    }
+
+    .metaValue {
+        font-size: 1.4rem;
+    }
+
+    .heroCard {
+        max-width: 100%;
+    }
+
+    .cardInner {
+        padding: 24px;
+    }
+
+    .scrollDown {
+        display: none;
+    }
+}

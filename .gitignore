@@ -1,0 +1,26 @@
+# Environment
+.env
+
+# Dependencies
+node_modules/
+vendor/
+
+# Build
+.next/
+out/
+dist/
+
+# Uploads
+uploads/*
+!uploads/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Docker
+postgres_data/

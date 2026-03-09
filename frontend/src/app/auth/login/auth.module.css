@@ -1,0 +1,112 @@
+.page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-primary);
+    background-image: radial-gradient(ellipse at 30% 50%, rgba(201, 168, 76, 0.05) 0%, transparent 60%);
+    padding: 40px 20px;
+}
+
+.container {
+    width: 100%;
+    max-width: 440px;
+}
+
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 40px;
+    backdrop-filter: blur(10px);
+}
+
+.cardHeader {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.logo {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 3px;
+    display: block;
+    margin-bottom: 24px;
+}
+
+.logo span {
+    color: var(--gold-primary);
+    font-size: 0.6rem;
+    letter-spacing: 5px;
+    display: block;
+    font-family: var(--font-body);
+}
+
+.cardHeader h1 {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    margin-bottom: 8px;
+}
+
+.cardHeader p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.error {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 8px;
+    padding: 12px;
+    color: var(--accent-danger);
+    font-size: 0.85rem;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.switchAuth {
+    text-align: center;
+    margin-top: 24px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.switchAuth a {
+    color: var(--gold-primary);
+    font-weight: 600;
+}
+
+.switchAuth a:hover {
+    text-decoration: underline;
+}
+
+.demo {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.demo p {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+}
+
+.demo code {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    background: var(--bg-secondary);
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+@media (max-width: 480px) {
+    .card {
+        padding: 28px 20px;
+    }
+}

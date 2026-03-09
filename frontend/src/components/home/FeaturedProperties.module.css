@@ -1,0 +1,159 @@
+.featured {
+    background: var(--bg-primary);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 48px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 28px;
+}
+
+.propertyCard {
+    display: block;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    overflow: hidden;
+    transition: all var(--transition-base);
+    animation: fadeInUp 0.6s ease-out both;
+}
+
+.propertyCard:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-lg);
+}
+
+.cardImage {
+    position: relative;
+    width: 100%;
+    height: 220px;
+    overflow: hidden;
+}
+
+.cardImage img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.propertyCard:hover .cardImage img {
+    transform: scale(1.08);
+}
+
+.cardBadges {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    display: flex;
+    gap: 8px;
+}
+
+.typeBadge {
+    padding: 5px 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    border-radius: 6px;
+    text-transform: uppercase;
+}
+
+.typeBadge.sell {
+    background: rgba(201, 168, 76, 0.9);
+    color: var(--bg-primary);
+}
+
+.typeBadge.rent {
+    background: rgba(16, 185, 129, 0.9);
+    color: white;
+}
+
+.typeBadge.both {
+    background: rgba(59, 130, 246, 0.9);
+    color: white;
+}
+
+.categoryBadge {
+    padding: 5px 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    border-radius: 6px;
+    background: rgba(6, 11, 24, 0.75);
+    backdrop-filter: blur(4px);
+    color: var(--text-primary);
+}
+
+.cardBody {
+    padding: 22px;
+}
+
+.cardPrice {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--gold-primary);
+    margin-bottom: 8px;
+}
+
+.period {
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    font-weight: 400;
+    color: var(--text-muted);
+}
+
+.cardTitle {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.cardLocation {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+}
+
+.cardSpecs {
+    display: flex;
+    gap: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
+}
+
+.cardSpecs span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+    }
+
+    .grid {
+        grid-template-columns: 1fr;
+    }
+}
