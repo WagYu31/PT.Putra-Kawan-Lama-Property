@@ -931,28 +931,32 @@ function BookingManager() {
                                         {user?.role === 'admin' && (b.status === 'confirmed' || b.status === 'surveyed') && (
                                             <button className="btn btn-sm btn-primary" onClick={() => updateStatus(b.id, 'completed')}>Selesai</button>
                                         )}
-
                                         {/* Customer actions */}
                                         {user?.role === 'customer' && b.status === 'pending' && b.booking_type === 'survey' && (
                                             <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>⏳ Menunggu konfirmasi admin</span>
                                         )}
-                                        {user?.role === 'customer' && b.status === 'confirmed' && b.booking_type === 'survey' && (!b.doc_status || b.doc_status === '' || b.doc_status === 'doc_rejected') && (
-                                            <button className="btn btn-sm" style={{ background: '#3b82f6', color: '#fff' }} onClick={() => setDocModal(b)}>
-                                                📄 Upload Dokumen
-                                            </button>
-                                        )}
-                                        {user?.role === 'customer' && b.status === 'confirmed' && b.booking_type === 'survey' && b.doc_status === 'doc_rejected' && (
-                                            <span style={{ color: '#ef4444', fontSize: '0.75rem' }}>❌ Dokumen ditolak, upload ulang</span>
-                                        )}
-                                        {user?.role === 'customer' && b.status === 'confirmed' && b.booking_type === 'survey' && b.doc_status === 'doc_pending' && (
-                                            <span style={{ color: '#f59e0b', fontSize: '0.8rem' }}>⏳ Dokumen menunggu verifikasi</span>
-                                        )}
-                                        {user?.role === 'customer' && b.status === 'confirmed' && b.booking_type === 'survey' && b.doc_status === 'doc_approved' && (
+                                        {/* Survey confirmed → Lanjut Bayar langsung (tanpa upload dokumen) */}
+                                        {user?.role === 'customer' && b.status === 'confirmed' && b.booking_type === 'survey' && (
                                             <button className="btn btn-sm btn-primary" onClick={() => { setPayModal(b); setPayMethod('cash'); }}>
                                                 💳 Lanjut Bayar
                                             </button>
                                         )}
-                                        {user?.role === 'admin' && b.doc_status === 'doc_pending' && (
+                                        {/* Purchase/Rental: upload dokumen dulu sebelum bayar */}
+                                        {user?.role === 'customer' && (b.booking_type === 'purchase' || b.booking_type === 'rental') && (!b.doc_status || b.doc_status === '' || b.doc_status === 'doc_rejected') && (
+                                            <button className="btn btn-sm" style={{ background: '#3b82f6', color: '#fff' }} onClick={() => setDocModal(b)}>
+                                                📄 Upload Dokumen
+                                            </button>
+                                        )}
+                                        {user?.role === 'customer' && (b.booking_type === 'purchase' || b.booking_type === 'rental') && b.doc_status === 'doc_rejected' && (
+                                            <span style={{ color: '#ef4444', fontSize: '0.75rem' }}>❌ Dokumen ditolak, upload ulang</span>
+                                        )}
+                                        {user?.role === 'customer' && (b.booking_type === 'purchase' || b.booking_type === 'rental') && b.doc_status === 'doc_pending' && (
+                                            <span style={{ color: '#f59e0b', fontSize: '0.8rem' }}>⏳ Dokumen menunggu verifikasi</span>
+                                        )}
+                                        {user?.role === 'customer' && (b.booking_type === 'purchase' || b.booking_type === 'rental') && b.doc_status === 'doc_approved' && (
+                                            <span style={{ color: '#10b981', fontSize: '0.8rem' }}>✅ Dokumen disetujui</span>
+                                        )}
+                                        {user?.role === 'admin' && (b.booking_type === 'purchase' || b.booking_type === 'rental') && b.doc_status === 'doc_pending' && (
                                             <button className="btn btn-sm" style={{ background: '#8b5cf6', color: '#fff' }} onClick={() => setDocReviewModal(b)}>
                                                 📋 Review Dokumen
                                             </button>
