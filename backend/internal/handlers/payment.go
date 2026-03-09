@@ -496,6 +496,128 @@ func (h *PaymentHandler) GetPaymentStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"payment": payment})
 }
 
+// SyncPaymentStatus checks Midtrans API directly and updates local payment status.
+// Called by frontend after Midtrans Snap shows "Payment successful" (since webhook can't reach localhost).
+func (h *PaymentHandler) SyncPaymentStatus(c *gin.Context) {
+	paymentID := c.Param("id")
+
+	var payment models.Payment
+	if err := h.DB.First(&payment, paymentID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Payment not found"})
+		return
+	}
+
+	// Already paid? Skip
+	if payment.Status == models.PaymentPaid {
+		c.JSON(http.StatusOK, gin.H{"status": "already_paid", "payment": payment})
+		return
+	}
+
+	if payment.OrderID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No order ID"})
+		return
+	}
+
+	// Check status from Midtrans API
+	url := fmt.Sprintf("https://api.sandbox.midtrans.com/v2/%s/status", payment.OrderID)
+	req, _ := http.NewRequest("GET", url, nil)
+	authStr := base64.StdEncoding.EncodeToString([]byte(h.Cfg.MidtransServerKey + ":"))
+	req.Header.Set("Authorization", "Basic "+authStr)
+	req.Header.Set("Accept", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check Midtrans"})
+		return
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	var mtResp map[string]interface{}
+	json.Unmarshal(body, &mtResp)
+
+	txStatus, _ := mtResp["transaction_status"].(string)
+	fraudStatus, _ := mtResp["fraud_status"].(string)
+	paymentType, _ := mtResp["payment_type"].(string)
+
+	log.Printf("🔄 Sync payment %s: midtrans status=%s fraud=%s", payment.OrderID, txStatus, fraudStatus)
+
+	updated := false
+	switch txStatus {
+	case "capture":
+		if fraudStatus == "accept" {
+			payment.Status = models.PaymentPaid
+			now := time.Now()
+			payment.PaidAt = &now
+			updated = true
+		}
+	case "settlement":
+		payment.Status = models.PaymentPaid
+		now := time.Now()
+		payment.PaidAt = &now
+		updated = true
+	case "pending":
+		payment.Status = models.PaymentPending
+	case "deny", "cancel":
+		payment.Status = models.PaymentFailed
+		payment.SnapToken = ""
+	case "expire":
+		payment.Status = models.PaymentExpired
+		payment.SnapToken = ""
+	}
+
+	payment.PaymentMethod = paymentType
+	h.DB.Save(&payment)
+
+	// If just became paid, update booking + create notification + send email
+	if updated {
+		var booking models.Booking
+		h.DB.Preload("Property").Preload("Customer").First(&booking, payment.BookingID)
+
+		// Update booking status
+		if booking.PaymentMethod == "installment" {
+			var unpaidCount int64
+			h.DB.Model(&models.Payment{}).Where("booking_id = ? AND status != ?",
+				booking.ID, models.PaymentPaid).Count(&unpaidCount)
+			if unpaidCount == 0 {
+				h.DB.Model(&booking).Update("status", models.BookingCompleted)
+				h.DB.Model(&models.Property{}).Where("id = ?", booking.PropertyID).
+					Update("status", models.StatusSold)
+			} else if payment.BillingPeriod == 0 {
+				h.DB.Model(&booking).Update("status", models.BookingConfirmed)
+			}
+		} else {
+			h.DB.Model(&booking).Update("status", models.BookingConfirmed)
+			if booking.BookingType == models.BookingTypePurchase {
+				h.DB.Model(&models.Property{}).Where("id = ?", booking.PropertyID).
+					Update("status", models.StatusSold)
+			}
+		}
+
+		// Notification + email
+		paymentLabel := "Pembayaran"
+		if payment.BillingPeriod == 0 && payment.PaymentType == models.PaymentTypeInstallment {
+			paymentLabel = "Uang Muka (DP)"
+		} else if payment.PaymentType == models.PaymentTypeInstallment {
+			paymentLabel = fmt.Sprintf("Cicilan ke-%d", payment.BillingPeriod)
+		}
+		amountStr := fmt.Sprintf("Rp %.0f", payment.Amount)
+		invoiceNo := fmt.Sprintf("INV-%05d-%s", payment.ID, payment.CreatedAt.Format("20060102"))
+
+		notifTitle := fmt.Sprintf("✅ %s Berhasil", paymentLabel)
+		notifMsg := fmt.Sprintf("%s untuk properti %s sebesar %s telah berhasil.",
+			paymentLabel, booking.Property.Title, amountStr)
+		bookingID := booking.ID
+		CreateNotification(h.DB, booking.CustomerID, notifTitle, notifMsg, models.NotifPaymentSuccess, &bookingID)
+
+		go SendPaymentSuccessEmail(h.Cfg, booking.Customer.Name, booking.Customer.Email,
+			booking.Property.Title, paymentLabel, amountStr, invoiceNo)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": txStatus, "updated": updated, "payment": payment})
+}
+
 // List lists payments for admin or current user
 func (h *PaymentHandler) List(c *gin.Context) {
 	userID, _ := c.Get("userID")

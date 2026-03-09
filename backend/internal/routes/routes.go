@@ -111,6 +111,7 @@ func Setup(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 		payments.GET("", paymentHandler.List)
 		payments.GET("/:id", paymentHandler.GetPaymentStatus)
 		payments.GET("/overdue", middleware.RoleRequired(models.RoleAdmin), paymentHandler.CheckOverdueRentals)
+		payments.POST("/:id/sync", paymentHandler.SyncPaymentStatus)
 	}
 
 	// Inquiry routes

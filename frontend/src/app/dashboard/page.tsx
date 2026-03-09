@@ -821,7 +821,12 @@ function BookingManager() {
 
             // Step 3: Open Midtrans popup
             (window as any).snap.pay(snapData.snap_token, {
-                onSuccess: () => {
+                onSuccess: async () => {
+                    try {
+                        await fetch(`http://localhost:8081/api/payments/${snapData.payment_id}/sync`, {
+                            method: 'POST', headers: { Authorization: `Bearer ${token}` },
+                        });
+                    } catch (e) { console.error('Sync error:', e); }
                     alert('🎉 Pembayaran berhasil! Terima kasih.');
                     setPayModal(null);
                     fetchBookings();
@@ -1167,7 +1172,15 @@ function CicilanManager() {
             const data = await res.json();
             if (!res.ok) { alert(data.error || 'Gagal'); return; }
             (window as any).snap.pay(data.snap_token, {
-                onSuccess: () => { alert('✅ Pembayaran berhasil!'); window.location.reload(); },
+                onSuccess: async () => {
+                    try {
+                        await fetch(`http://localhost:8081/api/payments/${data.payment_id}/sync`, {
+                            method: 'POST', headers: { Authorization: `Bearer ${token}` },
+                        });
+                    } catch (e) { console.error('Sync error:', e); }
+                    alert('✅ Pembayaran berhasil!');
+                    window.location.reload();
+                },
                 onPending: () => alert('⏳ Pembayaran pending.'),
                 onError: () => alert('❌ Pembayaran gagal.'),
                 onClose: () => { },
