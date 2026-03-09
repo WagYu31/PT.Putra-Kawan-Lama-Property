@@ -735,7 +735,7 @@ function PropertyManager() {
 
 /* ========== BOOKING MANAGER ========== */
 function BookingManager() {
-    const { user } = useAuth();
+    const { user, token } = useAuth();
     const [bookings, setBookings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all');
@@ -744,6 +744,8 @@ function BookingManager() {
     const [payMethod, setPayMethod] = useState<'cash' | 'installment'>('cash');
     const [isPaying, setIsPaying] = useState(false);
     const [tenor, setTenor] = useState(12); // 3, 6, 12 months
+    const [docModal, setDocModal] = useState<any>(null);
+    const [docReviewModal, setDocReviewModal] = useState<any>(null);
 
     // Installment calculation
     const dpPercent = 0.10; // 10% DP
@@ -934,9 +936,25 @@ function BookingManager() {
                                         {user?.role === 'customer' && b.status === 'pending' && b.booking_type === 'survey' && (
                                             <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>⏳ Menunggu konfirmasi admin</span>
                                         )}
-                                        {user?.role === 'customer' && b.status === 'confirmed' && b.booking_type === 'survey' && (
+                                        {user?.role === 'customer' && b.status === 'confirmed' && b.booking_type === 'survey' && (!b.doc_status || b.doc_status === '' || b.doc_status === 'doc_rejected') && (
+                                            <button className="btn btn-sm" style={{ background: '#3b82f6', color: '#fff' }} onClick={() => setDocModal(b)}>
+                                                📄 Upload Dokumen
+                                            </button>
+                                        )}
+                                        {user?.role === 'customer' && b.status === 'confirmed' && b.booking_type === 'survey' && b.doc_status === 'doc_rejected' && (
+                                            <span style={{ color: '#ef4444', fontSize: '0.75rem' }}>❌ Dokumen ditolak, upload ulang</span>
+                                        )}
+                                        {user?.role === 'customer' && b.status === 'confirmed' && b.booking_type === 'survey' && b.doc_status === 'doc_pending' && (
+                                            <span style={{ color: '#f59e0b', fontSize: '0.8rem' }}>⏳ Dokumen menunggu verifikasi</span>
+                                        )}
+                                        {user?.role === 'customer' && b.status === 'confirmed' && b.booking_type === 'survey' && b.doc_status === 'doc_approved' && (
                                             <button className="btn btn-sm btn-primary" onClick={() => { setPayModal(b); setPayMethod('cash'); }}>
                                                 💳 Lanjut Bayar
+                                            </button>
+                                        )}
+                                        {user?.role === 'admin' && b.doc_status === 'doc_pending' && (
+                                            <button className="btn btn-sm" style={{ background: '#8b5cf6', color: '#fff' }} onClick={() => setDocReviewModal(b)}>
+                                                📋 Review Dokumen
                                             </button>
                                         )}
                                         {user?.role === 'customer' && b.status === 'completed' && (
@@ -1107,6 +1125,228 @@ function BookingManager() {
                     </div>
                 </div>
             )}
+
+            {/* Document Upload Modal (Customer) */}
+            {docModal && <DocumentUploadModal booking={docModal} token={token!} onClose={() => { setDocModal(null); fetchBookings(); }} />}
+
+            {/* Document Review Modal (Admin) */}
+            {docReviewModal && <DocumentReviewModal booking={docReviewModal} token={token!} onClose={() => { setDocReviewModal(null); fetchBookings(); }} />}
+        </div>
+    );
+}
+
+/* ========== DOCUMENT UPLOAD MODAL (Customer) ========== */
+function DocumentUploadModal({ booking, token, onClose }: { booking: any; token: string; onClose: () => void }) {
+    const [docs, setDocs] = useState<any[]>([]);
+    const [requiredTypes, setRequiredTypes] = useState<string[]>([]);
+    const [uploading, setUploading] = useState<string | null>(null);
+
+    const typeLabels: Record<string, string> = { ktp: 'KTP', kk: 'Kartu Keluarga (KK)', npwp: 'NPWP', slip_gaji: 'Slip Gaji / Surat Penghasilan' };
+
+    useEffect(() => {
+        fetchDocs();
+    }, []);
+
+    const fetchDocs = async () => {
+        const res = await fetch(`http://localhost:8081/api/documents/booking/${booking.id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+            const data = await res.json();
+            setDocs(data.documents || []);
+            setRequiredTypes(data.required_types || ['ktp']);
+        }
+    };
+
+    const uploadFile = async (docType: string, file: File) => {
+        setUploading(docType);
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', docType);
+        const res = await fetch(`http://localhost:8081/api/documents/upload/${booking.id}`, {
+            method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData,
+        });
+        if (res.ok) { await fetchDocs(); }
+        else { const d = await res.json(); alert(d.error || 'Upload gagal'); }
+        setUploading(null);
+    };
+
+    const getDocStatus = (docType: string) => docs.find(d => d.type === docType);
+
+    return (
+        <div onClick={onClose} style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex',
+            alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+        }}>
+            <div onClick={e => e.stopPropagation()} style={{
+                background: '#1a1f2e', borderRadius: 16, padding: 32, width: '90%', maxWidth: 550,
+                border: '1px solid rgba(201,168,76,0.2)',
+            }}>
+                <h2 style={{ marginBottom: 8 }}>📄 Upload Dokumen</h2>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: 24 }}>
+                    Upload dokumen yang diperlukan untuk melanjutkan pembayaran.
+                </p>
+
+                {requiredTypes.map(type => {
+                    const existing = getDocStatus(type);
+                    return (
+                        <div key={type} style={{
+                            padding: 16, marginBottom: 12, borderRadius: 10,
+                            background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+                        }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                                <strong>{typeLabels[type] || type}</strong>
+                                {existing && (
+                                    <span style={{
+                                        padding: '2px 10px', borderRadius: 12, fontSize: '0.7rem', fontWeight: 600,
+                                        background: existing.status === 'approved' ? 'rgba(16,185,129,0.15)' : existing.status === 'rejected' ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)',
+                                        color: existing.status === 'approved' ? '#10b981' : existing.status === 'rejected' ? '#ef4444' : '#f59e0b',
+                                    }}>{existing.status === 'approved' ? '✅ Disetujui' : existing.status === 'rejected' ? '❌ Ditolak' : '⏳ Menunggu'}</span>
+                                )}
+                            </div>
+                            {existing?.status === 'rejected' && existing.rejected_reason && (
+                                <p style={{ color: '#ef4444', fontSize: '0.8rem', marginBottom: 8 }}>
+                                    Alasan: {existing.rejected_reason}
+                                </p>
+                            )}
+                            {existing?.original_name && (
+                                <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginBottom: 8 }}>
+                                    📎 {existing.original_name}
+                                </p>
+                            )}
+                            {(!existing || existing.status === 'rejected') && (
+                                <label style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 8,
+                                    background: '#3b82f6', color: '#fff', cursor: 'pointer', fontSize: '0.8rem',
+                                }}>
+                                    {uploading === type ? '⏳ Mengupload...' : (existing ? '🔄 Upload Ulang' : '📤 Pilih File')}
+                                    <input type="file" accept=".jpg,.jpeg,.png,.pdf" style={{ display: 'none' }}
+                                        onChange={e => { if (e.target.files?.[0]) uploadFile(type, e.target.files[0]); }}
+                                        disabled={uploading !== null} />
+                                </label>
+                            )}
+                        </div>
+                    );
+                })}
+
+                <button onClick={onClose} style={{
+                    width: '100%', padding: 12, marginTop: 8, background: 'transparent',
+                    border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'var(--text-muted)', cursor: 'pointer',
+                }}>Tutup</button>
+            </div>
+        </div>
+    );
+}
+
+/* ========== DOCUMENT REVIEW MODAL (Admin) ========== */
+function DocumentReviewModal({ booking, token, onClose }: { booking: any; token: string; onClose: () => void }) {
+    const [docs, setDocs] = useState<any[]>([]);
+    const [requiredTypes, setRequiredTypes] = useState<string[]>([]);
+    const [rejectReason, setRejectReason] = useState('');
+    const [rejectingId, setRejectingId] = useState<number | null>(null);
+
+    const typeLabels: Record<string, string> = { ktp: 'KTP', kk: 'Kartu Keluarga (KK)', npwp: 'NPWP', slip_gaji: 'Slip Gaji' };
+
+    useEffect(() => { fetchDocs(); }, []);
+
+    const fetchDocs = async () => {
+        const res = await fetch(`http://localhost:8081/api/documents/booking/${booking.id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+            const data = await res.json();
+            setDocs(data.documents || []);
+            setRequiredTypes(data.required_types || []);
+        }
+    };
+
+    const verifyDoc = async (docId: number, action: 'approve' | 'reject', reason = '') => {
+        const res = await fetch(`http://localhost:8081/api/documents/${docId}/verify`, {
+            method: 'PATCH',
+            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action, reason }),
+        });
+        if (res.ok) { await fetchDocs(); setRejectingId(null); setRejectReason(''); }
+    };
+
+    return (
+        <div onClick={onClose} style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex',
+            alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+        }}>
+            <div onClick={e => e.stopPropagation()} style={{
+                background: '#1a1f2e', borderRadius: 16, padding: 32, width: '90%', maxWidth: 600,
+                border: '1px solid rgba(201,168,76,0.2)', maxHeight: '80vh', overflowY: 'auto',
+            }}>
+                <h2 style={{ marginBottom: 8 }}>📋 Review Dokumen</h2>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: 20 }}>
+                    Booking #{booking.id} — {booking.property?.title || 'Properti'}
+                </p>
+
+                {docs.length === 0 ? (
+                    <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 20 }}>Belum ada dokumen di-upload.</p>
+                ) : docs.map(doc => (
+                    <div key={doc.id} style={{
+                        padding: 16, marginBottom: 12, borderRadius: 10,
+                        background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                            <strong>{typeLabels[doc.type] || doc.type}</strong>
+                            <span style={{
+                                padding: '2px 10px', borderRadius: 12, fontSize: '0.7rem', fontWeight: 600,
+                                background: doc.status === 'approved' ? 'rgba(16,185,129,0.15)' : doc.status === 'rejected' ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)',
+                                color: doc.status === 'approved' ? '#10b981' : doc.status === 'rejected' ? '#ef4444' : '#f59e0b',
+                            }}>{doc.status === 'approved' ? '✅ Disetujui' : doc.status === 'rejected' ? '❌ Ditolak' : '⏳ Pending'}</span>
+                        </div>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 8 }}>📎 {doc.original_name}</p>
+                        <a href={`http://localhost:8081${doc.file_path}`} target="_blank" rel="noopener noreferrer"
+                            style={{ color: '#3b82f6', fontSize: '0.8rem', textDecoration: 'underline' }}>
+                            👁 Lihat Dokumen
+                        </a>
+
+                        {doc.status === 'pending' && (
+                            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                                <button onClick={() => verifyDoc(doc.id, 'approve')} style={{
+                                    padding: '6px 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                                    background: '#10b981', color: '#fff', fontSize: '0.8rem',
+                                }}>✅ Setujui</button>
+                                {rejectingId === doc.id ? (
+                                    <div style={{ display: 'flex', gap: 4, flex: 1 }}>
+                                        <input value={rejectReason} onChange={e => setRejectReason(e.target.value)}
+                                            placeholder="Alasan penolakan..." style={{
+                                                flex: 1, padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)',
+                                                background: 'rgba(0,0,0,0.2)', color: '#fff', fontSize: '0.8rem',
+                                            }} />
+                                        <button onClick={() => verifyDoc(doc.id, 'reject', rejectReason)} style={{
+                                            padding: '6px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                                            background: '#ef4444', color: '#fff', fontSize: '0.8rem',
+                                        }}>Tolak</button>
+                                    </div>
+                                ) : (
+                                    <button onClick={() => setRejectingId(doc.id)} style={{
+                                        padding: '6px 16px', borderRadius: 8, border: '1px solid #ef4444', cursor: 'pointer',
+                                        background: 'transparent', color: '#ef4444', fontSize: '0.8rem',
+                                    }}>❌ Tolak</button>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                ))}
+
+                {/* Missing docs warning */}
+                {requiredTypes.filter(t => !docs.find(d => d.type === t)).length > 0 && (
+                    <div style={{ padding: 12, borderRadius: 8, background: 'rgba(245,158,11,0.1)', marginBottom: 12 }}>
+                        <p style={{ color: '#f59e0b', fontSize: '0.8rem' }}>
+                            ⚠️ Dokumen belum lengkap: {requiredTypes.filter(t => !docs.find(d => d.type === t)).map(t => typeLabels[t]).join(', ')}
+                        </p>
+                    </div>
+                )}
+
+                <button onClick={onClose} style={{
+                    width: '100%', padding: 12, marginTop: 8, background: 'transparent',
+                    border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'var(--text-muted)', cursor: 'pointer',
+                }}>Tutup</button>
+            </div>
         </div>
     );
 }

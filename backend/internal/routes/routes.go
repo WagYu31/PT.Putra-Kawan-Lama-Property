@@ -162,4 +162,14 @@ func Setup(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 		favs.GET("/:id/check", favoriteHandler.Check)
 		favs.GET("/ids", favoriteHandler.CheckBulk)
 	}
+
+	// Document routes (protected)
+	docHandler := &handlers.DocumentHandler{DB: db}
+	docs := api.Group("/documents")
+	docs.Use(middleware.AuthRequired(cfg))
+	{
+		docs.POST("/upload/:booking_id", docHandler.Upload)
+		docs.GET("/booking/:booking_id", docHandler.ListByBooking)
+		docs.PATCH("/:id/verify", middleware.RoleRequired(models.RoleAdmin), docHandler.Verify)
+	}
 }

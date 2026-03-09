@@ -49,13 +49,17 @@ type Booking struct {
 	EndDate    *time.Time     `json:"end_date"`
 	RentPrice  float64        `json:"rent_price"` // price per period
 
+	// Document verification status
+	DocStatus string `gorm:"size:20;default:''" json:"doc_status"` // "", doc_pending, doc_approved, doc_rejected
+
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 
-	Property Property  `gorm:"foreignKey:PropertyID" json:"property,omitempty"`
-	Customer User      `gorm:"foreignKey:CustomerID" json:"customer,omitempty"`
-	Payments []Payment `gorm:"foreignKey:BookingID" json:"payments,omitempty"`
+	Property  Property   `gorm:"foreignKey:PropertyID" json:"property,omitempty"`
+	Customer  User       `gorm:"foreignKey:CustomerID" json:"customer,omitempty"`
+	Payments  []Payment  `gorm:"foreignKey:BookingID" json:"payments,omitempty"`
+	Documents []Document `gorm:"foreignKey:BookingID" json:"documents,omitempty"`
 }
 
 type Inquiry struct {

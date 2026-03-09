@@ -48,6 +48,20 @@ func (h *PaymentHandler) CreateSnapToken(c *gin.Context) {
 		return
 	}
 
+	// Block payment if documents not approved (for purchase/rental bookings)
+	if booking.BookingType == models.BookingTypePurchase || booking.BookingType == models.BookingTypeRental {
+		if booking.DocStatus != "doc_approved" {
+			msg := "Dokumen belum diverifikasi. Silakan upload dokumen terlebih dahulu."
+			if booking.DocStatus == "doc_pending" {
+				msg = "Dokumen sedang menunggu verifikasi admin."
+			} else if booking.DocStatus == "doc_rejected" {
+				msg = "Dokumen ditolak. Silakan upload ulang dokumen yang benar."
+			}
+			c.JSON(http.StatusForbidden, gin.H{"error": msg, "doc_status": booking.DocStatus})
+			return
+		}
+	}
+
 	// ===== INSTALLMENT PURCHASE: auto-generate schedule & pay next =====
 	if booking.BookingType == models.BookingTypePurchase && booking.PaymentMethod == "installment" {
 		// Auto-fix legacy bookings with missing tenor/dp
