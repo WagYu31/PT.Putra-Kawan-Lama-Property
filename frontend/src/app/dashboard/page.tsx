@@ -746,6 +746,7 @@ function BookingManager() {
     const [tenor, setTenor] = useState(12); // 3, 6, 12 months
     const [docModal, setDocModal] = useState<any>(null);
     const [docReviewModal, setDocReviewModal] = useState<any>(null);
+    const [dealModal, setDealModal] = useState<any>(null);
 
     // Installment calculation
     const dpPercent = 0.10; // 10% DP
@@ -961,7 +962,15 @@ function BookingManager() {
                                                 📋 Review Dokumen
                                             </button>
                                         )}
-                                        {user?.role === 'customer' && b.status === 'completed' && (
+                                        {user?.role === 'customer' && b.status === 'completed' && b.booking_type === 'survey' && (
+                                            <>
+                                                <span style={{ color: '#10b981', fontSize: '0.8rem' }}>✅ Survey Selesai</span>
+                                                <button className="btn btn-sm btn-primary" onClick={() => setDealModal(b)} style={{ marginLeft: 4 }}>
+                                                    🏠 Lanjut Proses
+                                                </button>
+                                            </>
+                                        )}
+                                        {user?.role === 'customer' && b.status === 'completed' && b.booking_type !== 'survey' && (
                                             <span style={{ color: '#10b981', fontSize: '0.8rem' }}>✅ Selesai</span>
                                         )}
                                         {user?.role === 'customer' && b.booking_type === 'purchase' && b.status === 'pending' && (
@@ -1135,6 +1144,169 @@ function BookingManager() {
 
             {/* Document Review Modal (Admin) */}
             {docReviewModal && <DocumentReviewModal booking={docReviewModal} token={token!} onClose={() => { setDocReviewModal(null); fetchBookings(); }} />}
+
+            {/* Deal Modal (Post-Survey) */}
+            {dealModal && <DealModal booking={dealModal} token={token!} onClose={() => { setDealModal(null); fetchBookings(); }} />}
+        </div>
+    );
+}
+
+/* ========== DEAL MODAL (Post-Survey → Purchase/Rental) ========== */
+function DealModal({ booking, token, onClose }: { booking: any; token: string; onClose: () => void }) {
+    const [dealType, setDealType] = useState<'purchase' | 'rental'>('purchase');
+    const [payMethod, setPayMethod] = useState<'cash' | 'installment'>('cash');
+    const [tenor, setTenor] = useState(12);
+    const [rentPeriod, setRentPeriod] = useState('monthly');
+    const [startDate, setStartDate] = useState('');
+    const [duration, setDuration] = useState(1);
+    const [submitting, setSubmitting] = useState(false);
+
+    const propertyPrice = booking.total_price || booking.property?.price || 0;
+    const fmtPrice = (n: number) => {
+        if (n >= 1e9) return `Rp ${(n / 1e9).toFixed(1)} M`;
+        if (n >= 1e6) return `Rp ${(n / 1e6).toFixed(0)} Juta`;
+        return `Rp ${n.toLocaleString('id-ID')}`;
+    };
+
+    const handleSubmit = async () => {
+        setSubmitting(true);
+        try {
+            let res;
+            if (dealType === 'purchase') {
+                res = await fetch('http://localhost:8081/api/bookings/purchase', {
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        property_id: booking.property_id,
+                        payment_method: payMethod,
+                        tenor: payMethod === 'installment' ? tenor : 0,
+                        message: `Lanjutan dari survey #${booking.id}`,
+                    }),
+                });
+            } else {
+                if (!startDate) { alert('Pilih tanggal mulai sewa'); setSubmitting(false); return; }
+                res = await fetch('http://localhost:8081/api/bookings/rental', {
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        property_id: booking.property_id,
+                        rent_period: rentPeriod,
+                        start_date: startDate,
+                        duration,
+                        message: `Lanjutan dari survey #${booking.id}`,
+                    }),
+                });
+            }
+            if (res.ok) {
+                alert(dealType === 'purchase' ? '✅ Booking pembelian berhasil dibuat! Silakan upload dokumen.' : '✅ Booking sewa berhasil dibuat! Silakan upload dokumen.');
+                onClose();
+            } else {
+                const d = await res.json();
+                alert(d.error || 'Gagal membuat booking');
+            }
+        } catch { alert('Error membuat booking'); }
+        setSubmitting(false);
+    };
+
+    const inputStyle = {
+        width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)',
+        background: 'rgba(0,0,0,0.2)', color: '#fff', fontSize: '0.9rem',
+    };
+
+    return (
+        <div onClick={onClose} style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex',
+            alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+        }}>
+            <div onClick={e => e.stopPropagation()} style={{
+                background: '#1a1f2e', borderRadius: 16, padding: 32, width: '90%', maxWidth: 500,
+                border: '1px solid rgba(201,168,76,0.2)', maxHeight: '85vh', overflowY: 'auto',
+            }}>
+                <h2 style={{ marginBottom: 4 }}>🏠 Lanjut Proses</h2>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: 20 }}>
+                    {booking.property?.title || 'Properti'} — {fmtPrice(propertyPrice)}
+                </p>
+
+                {/* Deal Type Selector */}
+                <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+                    <button onClick={() => setDealType('purchase')} style={{
+                        flex: 1, padding: 12, borderRadius: 10, border: 'none', cursor: 'pointer',
+                        background: dealType === 'purchase' ? 'var(--gold)' : 'rgba(255,255,255,0.05)',
+                        color: dealType === 'purchase' ? '#000' : '#fff', fontWeight: 600,
+                    }}>🏷️ Beli</button>
+                    <button onClick={() => setDealType('rental')} style={{
+                        flex: 1, padding: 12, borderRadius: 10, border: 'none', cursor: 'pointer',
+                        background: dealType === 'rental' ? 'var(--gold)' : 'rgba(255,255,255,0.05)',
+                        color: dealType === 'rental' ? '#000' : '#fff', fontWeight: 600,
+                    }}>🔑 Sewa</button>
+                </div>
+
+                {dealType === 'purchase' ? (
+                    <>
+                        <label style={{ display: 'block', marginBottom: 6, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Metode Pembayaran</label>
+                        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                            <button onClick={() => setPayMethod('cash')} style={{
+                                flex: 1, padding: 10, borderRadius: 8, border: 'none', cursor: 'pointer',
+                                background: payMethod === 'cash' ? '#10b981' : 'rgba(255,255,255,0.05)',
+                                color: '#fff', fontWeight: 600, fontSize: '0.85rem',
+                            }}>💵 Cash</button>
+                            <button onClick={() => setPayMethod('installment')} style={{
+                                flex: 1, padding: 10, borderRadius: 8, border: 'none', cursor: 'pointer',
+                                background: payMethod === 'installment' ? '#3b82f6' : 'rgba(255,255,255,0.05)',
+                                color: '#fff', fontWeight: 600, fontSize: '0.85rem',
+                            }}>📋 Cicilan</button>
+                        </div>
+                        {payMethod === 'installment' && (
+                            <>
+                                <label style={{ display: 'block', marginBottom: 6, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Tenor</label>
+                                <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                                    {[3, 6, 12].map(t => (
+                                        <button key={t} onClick={() => setTenor(t)} style={{
+                                            flex: 1, padding: 10, borderRadius: 8, border: 'none', cursor: 'pointer',
+                                            background: tenor === t ? '#3b82f6' : 'rgba(255,255,255,0.05)',
+                                            color: '#fff', fontWeight: 600,
+                                        }}>{t} bulan</button>
+                                    ))}
+                                </div>
+                                <div style={{ padding: 12, borderRadius: 8, background: 'rgba(59,130,246,0.1)', marginBottom: 16, fontSize: '0.85rem' }}>
+                                    <p>💰 DP (10%): <strong>{fmtPrice(Math.round(propertyPrice * 0.1))}</strong></p>
+                                    <p>📋 Cicilan/bulan: <strong>{fmtPrice(Math.round((propertyPrice * 0.9) / tenor))}</strong></p>
+                                </div>
+                            </>
+                        )}
+                        {payMethod === 'cash' && (
+                            <div style={{ padding: 12, borderRadius: 8, background: 'rgba(16,185,129,0.1)', marginBottom: 16, fontSize: '0.85rem' }}>
+                                <p>💰 Total Bayar: <strong>{fmtPrice(propertyPrice)}</strong></p>
+                            </div>
+                        )}
+                    </>
+                ) : (
+                    <>
+                        <label style={{ display: 'block', marginBottom: 6, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Periode Sewa</label>
+                        <select value={rentPeriod} onChange={e => setRentPeriod(e.target.value)} style={{ ...inputStyle, marginBottom: 12 }}>
+                            <option value="daily">Harian</option>
+                            <option value="monthly">Bulanan</option>
+                            <option value="yearly">Tahunan</option>
+                        </select>
+                        <label style={{ display: 'block', marginBottom: 6, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Tanggal Mulai</label>
+                        <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={{ ...inputStyle, marginBottom: 12 }} />
+                        <label style={{ display: 'block', marginBottom: 6, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Durasi ({rentPeriod === 'daily' ? 'hari' : rentPeriod === 'monthly' ? 'bulan' : 'tahun'})</label>
+                        <input type="number" min={1} value={duration} onChange={e => setDuration(Number(e.target.value))} style={{ ...inputStyle, marginBottom: 16 }} />
+                    </>
+                )}
+
+                <button onClick={handleSubmit} disabled={submitting} style={{
+                    width: '100%', padding: 14, borderRadius: 12, border: 'none', cursor: 'pointer',
+                    background: 'var(--gold)', color: '#000', fontWeight: 700, fontSize: '1rem',
+                    opacity: submitting ? 0.6 : 1,
+                }}>
+                    {submitting ? '⏳ Memproses...' : dealType === 'purchase' ? '🏷️ Buat Booking Pembelian' : '🔑 Buat Booking Sewa'}
+                </button>
+                <button onClick={onClose} style={{
+                    width: '100%', padding: 10, marginTop: 8, background: 'transparent',
+                    border: 'none', color: 'var(--text-muted)', cursor: 'pointer',
+                }}>Batal</button>
+            </div>
         </div>
     );
 }
