@@ -434,6 +434,18 @@ function PropertyManager() {
         } catch { alert('Gagal menghapus'); }
     };
 
+    const handleStatusChange = async (id: number, newStatus: string) => {
+        try {
+            const res = await fetch(`http://localhost:8081/api/properties/${id}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ status: newStatus }),
+            });
+            if (!res.ok) throw new Error('Failed');
+            fetchProps();
+        } catch { alert('Gagal mengubah status'); }
+    };
+
     const setField = (key: string, val: any) => setForm(f => ({ ...f, [key]: val }));
     const toggleFacility = (f: string) =>
         setForm(prev => ({
@@ -467,7 +479,22 @@ function PropertyManager() {
                                         <td>{p.title}</td>
                                         <td><span className={`badge ${typeBadge[p.type] || 'badge-gold'}`}>{typeLabel[p.type] || p.type}</span></td>
                                         <td style={{ whiteSpace: 'nowrap' }}>{fmtPrice(p.price)}{p.type === 'rent' ? '/bln' : ''}</td>
-                                        <td><span className={`badge ${p.status === 'available' ? 'badge-success' : 'badge-warning'}`}>{p.status}</span></td>
+                                        <td>
+                                            <select
+                                                value={p.status}
+                                                onChange={(e) => handleStatusChange(p.id, e.target.value)}
+                                                style={{
+                                                    background: p.status === 'available' ? 'rgba(16,185,129,0.15)' : p.status === 'sold' ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)',
+                                                    color: p.status === 'available' ? '#10b981' : p.status === 'sold' ? '#ef4444' : '#f59e0b',
+                                                    border: 'none', borderRadius: 8, padding: '4px 8px', fontSize: '0.8rem', fontWeight: 600,
+                                                    cursor: 'pointer', appearance: 'auto',
+                                                }}
+                                            >
+                                                <option value="available">Tersedia</option>
+                                                <option value="sold">Terjual</option>
+                                                <option value="rented">Disewa</option>
+                                            </select>
+                                        </td>
                                         <td>{p.views || 0}</td>
                                         <td style={{ display: 'flex', gap: '6px' }}>
                                             <button className="btn btn-ghost btn-sm" onClick={() => openEdit(p)}>Edit</button>
