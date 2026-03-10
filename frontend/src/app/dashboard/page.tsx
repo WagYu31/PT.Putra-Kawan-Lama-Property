@@ -159,10 +159,13 @@ function DashboardContent() {
                             {activeTab === 'overview' ? `Halo, ${user.name}!` : menuItems.find(m => m.key === activeTab)?.label}
                         </h1>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div className={styles.topbarActions}>
                         <ThemeToggle />
                         <NotificationBell />
-                        <Link href="/" className="btn btn-ghost btn-sm">← Ke Website</Link>
+                        <Link href="/" className="btn btn-ghost btn-sm" title="Ke Website">
+                            <span className={styles.hideOnMobile}>← Ke Website</span>
+                            <span className={styles.showOnMobile}>🏠</span>
+                        </Link>
                     </div>
                 </header>
 
@@ -200,34 +203,34 @@ function DashboardContent() {
                             {/* Two Column Layout */}
                             <div className={styles.overviewColumns}>
                                 {/* Recent Bookings */}
-                                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.5rem' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                                        <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-primary)' }}>📋 Booking Terbaru</h3>
-                                        <button onClick={() => setActiveTab('bookings')} style={{ background: 'none', border: 'none', color: 'var(--gold-primary)', cursor: 'pointer', fontSize: '0.85rem' }}>Lihat Semua →</button>
+                                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1rem', overflow: 'hidden' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', gap: '0.5rem' }}>
+                                        <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>📋 Booking Terbaru</h3>
+                                        <button onClick={() => setActiveTab('bookings')} style={{ background: 'none', border: 'none', color: 'var(--gold-primary)', cursor: 'pointer', fontSize: '0.8rem', whiteSpace: 'nowrap', flexShrink: 0 }}>Lihat Semua →</button>
                                     </div>
                                     {recentBookings.length > 0 ? (
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                             {recentBookings.map((b: { id: number; booking_type: string; status: string; property?: { title: string }; created_at: string; total_price?: number; payment_method?: string }) => (
-                                                <div key={b.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.85rem 1rem', background: 'var(--bg-tertiary)', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                                        <span style={{ fontSize: '1.3rem' }}>{b.booking_type === 'survey' ? '🔍' : b.booking_type === 'purchase' ? '🏠' : '📝'}</span>
-                                                        <div>
-                                                            <p style={{ fontWeight: 500, color: 'var(--text-primary)', fontSize: '0.9rem' }}>{b.property?.title || 'Properti'}</p>
-                                                            <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-                                                                {b.booking_type === 'survey' ? 'Survey' : b.booking_type === 'purchase' ? (b.payment_method === 'installment' ? 'Pembelian Cicilan' : 'Pembelian Cash') : 'Sewa'}
-                                                                {' · '}{new Date(b.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                <div key={b.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.65rem 0.75rem', background: 'var(--bg-tertiary)', borderRadius: '10px', border: '1px solid var(--border-color)', gap: '0.5rem', overflow: 'hidden' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0, overflow: 'hidden' }}>
+                                                        <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{b.booking_type === 'survey' ? '🔍' : b.booking_type === 'purchase' ? '🏠' : '📝'}</span>
+                                                        <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                                                            <p style={{ fontWeight: 500, color: 'var(--text-primary)', fontSize: '0.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.property?.title || 'Properti'}</p>
+                                                            <p style={{ color: 'var(--text-muted)', fontSize: '0.7rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                                {b.booking_type === 'survey' ? 'Survey' : b.booking_type === 'purchase' ? (b.payment_method === 'installment' ? 'Cicilan' : 'Cash') : 'Sewa'}
+                                                                {' · '}{new Date(b.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
                                                             </p>
                                                         </div>
                                                     </div>
-                                                    <div style={{ textAlign: 'right' }}>
+                                                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
                                                         <span style={{
-                                                            padding: '3px 10px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 600,
+                                                            padding: '2px 8px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 600,
                                                             background: b.status === 'completed' ? 'rgba(16,185,129,0.15)' : b.status === 'confirmed' ? 'rgba(59,130,246,0.15)' : b.status === 'cancelled' ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)',
                                                             color: b.status === 'completed' ? '#10b981' : b.status === 'confirmed' ? '#3b82f6' : b.status === 'cancelled' ? '#ef4444' : '#f59e0b'
                                                         }}>
                                                             {b.status === 'completed' ? '✅ Selesai' : b.status === 'confirmed' ? '✅ Dikonfirmasi' : b.status === 'cancelled' ? '❌ Dibatalkan' : '⏳ Pending'}
                                                         </span>
-                                                        {b.total_price ? <p style={{ color: 'var(--gold-primary)', fontSize: '0.8rem', marginTop: '4px', fontWeight: 600 }}>Rp {(b.total_price / 1e9).toFixed(1)} M</p> : null}
+                                                        {b.total_price ? <p style={{ color: 'var(--gold-primary)', fontSize: '0.75rem', marginTop: '2px', fontWeight: 600 }}>Rp {(b.total_price / 1e9).toFixed(1)} M</p> : null}
                                                     </div>
                                                 </div>
                                             ))}
@@ -903,11 +906,12 @@ function BookingManager() {
 
     return (
         <div className={styles.tableContainer}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <h2>Daftar Booking</h2>
-                <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, gap: 8 }}>
+                <h2 style={{ fontSize: '1.1rem' }}>Daftar Booking</h2>
+                <div style={{ display: 'flex', gap: 6, overflowX: 'auto', WebkitOverflowScrolling: 'touch', flexShrink: 0, maxWidth: '100%' }}>
                     {['all', 'pending', 'confirmed', 'completed', 'cancelled'].map(f => (
                         <button key={f} className={`btn btn-sm ${filter === f ? 'btn-primary' : 'btn-ghost'}`}
+                            style={{ whiteSpace: 'nowrap', fontSize: '0.75rem', padding: '4px 10px' }}
                             onClick={() => { setFilter(f); setLoading(true); }}>
                             {f === 'all' ? 'Semua' : (statusBadge[f]?.label || f)}
                         </button>
@@ -922,102 +926,104 @@ function BookingManager() {
                     <p>Belum ada booking {filter !== 'all' ? `dengan status "${statusBadge[filter]?.label || filter}"` : ''}</p>
                 </div>
             ) : (
-                <table className={styles.table}>
-                    <thead>
-                        <tr>
-                            <th>Properti</th>
-                            <th>Customer</th>
-                            <th>Tipe</th>
-                            <th>Status</th>
-                            <th>Tanggal</th>
-                            <th>Harga</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {bookings.map((b: any) => (
-                            <tr key={b.id}>
-                                <td>{b.property?.title || `Properti #${b.property_id}`}</td>
-                                <td>
-                                    <div>
-                                        <strong>{b.customer?.name || '-'}</strong>
-                                        <br /><small style={{ color: 'var(--text-muted)' }}>{b.customer?.email || ''}</small>
-                                    </div>
-                                </td>
-                                <td>{typeLabel[b.booking_type] || b.booking_type}</td>
-                                <td>
-                                    <span className={`badge ${statusBadge[b.status]?.cls || ''}`}>
-                                        {statusBadge[b.status]?.label || b.status}
-                                    </span>
-                                </td>
-                                <td>
-                                    {b.booking_type === 'survey'
-                                        ? fmtDate(b.survey_date)
-                                        : b.start_date
-                                            ? `${fmtDate(b.start_date)} - ${fmtDate(b.end_date)}`
-                                            : fmtDate(b.created_at)}
-                                </td>
-                                <td>{fmtPrice(b.total_price)}</td>
-                                <td>
-                                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                                        {/* Admin actions */}
-                                        {user?.role === 'admin' && b.status === 'pending' && (<>
-                                            <button className="btn btn-sm btn-primary" onClick={() => updateStatus(b.id, 'confirmed')}>✅ Konfirmasi</button>
-                                            <button className="btn btn-sm" style={{ color: '#ef4444' }} onClick={() => updateStatus(b.id, 'cancelled')}>Tolak</button>
-                                        </>)}
-                                        {user?.role === 'admin' && (b.status === 'confirmed' || b.status === 'surveyed') && (
-                                            <button className="btn btn-sm btn-primary" onClick={() => updateStatus(b.id, 'completed')}>Selesai</button>
-                                        )}
-                                        {/* Customer actions */}
-                                        {user?.role === 'customer' && b.status === 'pending' && b.booking_type === 'survey' && (
-                                            <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>⏳ Menunggu konfirmasi admin</span>
-                                        )}
-                                        {/* Survey confirmed = admin sudah setuju, menunggu jadwal survey */}
-                                        {user?.role === 'customer' && b.status === 'confirmed' && b.booking_type === 'survey' && (
-                                            <span style={{ color: '#3b82f6', fontSize: '0.8rem' }}>📅 Survey dikonfirmasi</span>
-                                        )}
-                                        {/* Purchase/Rental CONFIRMED + no docs → Upload Dokumen */}
-                                        {user?.role === 'customer' && b.status === 'confirmed' && (b.booking_type === 'purchase' || b.booking_type === 'rental') && (!b.doc_status || b.doc_status === '' || b.doc_status === 'doc_rejected') && (
-                                            <button className="btn btn-sm" style={{ background: '#3b82f6', color: '#fff' }} onClick={() => setDocModal(b)}>
-                                                📄 Upload Dokumen
-                                            </button>
-                                        )}
-                                        {user?.role === 'customer' && (b.booking_type === 'purchase' || b.booking_type === 'rental') && b.doc_status === 'doc_rejected' && (
-                                            <span style={{ color: '#ef4444', fontSize: '0.75rem' }}>❌ Dokumen ditolak, upload ulang</span>
-                                        )}
-                                        {user?.role === 'customer' && (b.booking_type === 'purchase' || b.booking_type === 'rental') && b.doc_status === 'doc_pending' && (
-                                            <span style={{ color: '#f59e0b', fontSize: '0.8rem' }}>⏳ Dokumen menunggu verifikasi</span>
-                                        )}
-                                        {user?.role === 'customer' && b.status === 'confirmed' && (b.booking_type === 'purchase' || b.booking_type === 'rental') && b.doc_status === 'doc_approved' && (
-                                            <button className="btn btn-sm btn-primary" onClick={() => { setPayModal(b); setPayMethod('cash'); }}>
-                                                💳 Lanjut Bayar
-                                            </button>
-                                        )}
-                                        {user?.role === 'admin' && (b.booking_type === 'purchase' || b.booking_type === 'rental') && b.doc_status === 'doc_pending' && (
-                                            <button className="btn btn-sm" style={{ background: '#8b5cf6', color: '#fff' }} onClick={() => setDocReviewModal(b)}>
-                                                📋 Review Dokumen
-                                            </button>
-                                        )}
-                                        {user?.role === 'customer' && b.status === 'completed' && b.booking_type === 'survey' && (
-                                            <>
-                                                <span style={{ color: '#10b981', fontSize: '0.8rem' }}>✅ Survey Selesai</span>
-                                                <button className="btn btn-sm btn-primary" onClick={() => setDealModal(b)} style={{ marginLeft: 4 }}>
-                                                    🏠 Lanjut Proses
-                                                </button>
-                                            </>
-                                        )}
-                                        {user?.role === 'customer' && b.status === 'completed' && b.booking_type !== 'survey' && (
-                                            <span style={{ color: '#10b981', fontSize: '0.8rem' }}>✅ Selesai</span>
-                                        )}
-                                        {user?.role === 'customer' && b.booking_type === 'purchase' && b.status === 'pending' && (
-                                            <span style={{ color: '#f59e0b', fontSize: '0.8rem' }}>⏳ Menunggu pembayaran</span>
-                                        )}
-                                    </div>
-                                </td>
+                <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                    <table className={styles.table}>
+                        <thead>
+                            <tr>
+                                <th>Properti</th>
+                                <th>Customer</th>
+                                <th>Tipe</th>
+                                <th>Status</th>
+                                <th>Tanggal</th>
+                                <th>Harga</th>
+                                <th>Aksi</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {bookings.map((b: any) => (
+                                <tr key={b.id}>
+                                    <td>{b.property?.title || `Properti #${b.property_id}`}</td>
+                                    <td>
+                                        <div>
+                                            <strong>{b.customer?.name || '-'}</strong>
+                                            <br /><small style={{ color: 'var(--text-muted)' }}>{b.customer?.email || ''}</small>
+                                        </div>
+                                    </td>
+                                    <td>{typeLabel[b.booking_type] || b.booking_type}</td>
+                                    <td>
+                                        <span className={`badge ${statusBadge[b.status]?.cls || ''}`}>
+                                            {statusBadge[b.status]?.label || b.status}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {b.booking_type === 'survey'
+                                            ? fmtDate(b.survey_date)
+                                            : b.start_date
+                                                ? `${fmtDate(b.start_date)} - ${fmtDate(b.end_date)}`
+                                                : fmtDate(b.created_at)}
+                                    </td>
+                                    <td>{fmtPrice(b.total_price)}</td>
+                                    <td>
+                                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                                            {/* Admin actions */}
+                                            {user?.role === 'admin' && b.status === 'pending' && (<>
+                                                <button className="btn btn-sm btn-primary" onClick={() => updateStatus(b.id, 'confirmed')}>✅ Konfirmasi</button>
+                                                <button className="btn btn-sm" style={{ color: '#ef4444' }} onClick={() => updateStatus(b.id, 'cancelled')}>Tolak</button>
+                                            </>)}
+                                            {user?.role === 'admin' && (b.status === 'confirmed' || b.status === 'surveyed') && (
+                                                <button className="btn btn-sm btn-primary" onClick={() => updateStatus(b.id, 'completed')}>Selesai</button>
+                                            )}
+                                            {/* Customer actions */}
+                                            {user?.role === 'customer' && b.status === 'pending' && b.booking_type === 'survey' && (
+                                                <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>⏳ Menunggu konfirmasi admin</span>
+                                            )}
+                                            {/* Survey confirmed = admin sudah setuju, menunggu jadwal survey */}
+                                            {user?.role === 'customer' && b.status === 'confirmed' && b.booking_type === 'survey' && (
+                                                <span style={{ color: '#3b82f6', fontSize: '0.8rem' }}>📅 Survey dikonfirmasi</span>
+                                            )}
+                                            {/* Purchase/Rental CONFIRMED + no docs → Upload Dokumen */}
+                                            {user?.role === 'customer' && b.status === 'confirmed' && (b.booking_type === 'purchase' || b.booking_type === 'rental') && (!b.doc_status || b.doc_status === '' || b.doc_status === 'doc_rejected') && (
+                                                <button className="btn btn-sm" style={{ background: '#3b82f6', color: '#fff' }} onClick={() => setDocModal(b)}>
+                                                    📄 Upload Dokumen
+                                                </button>
+                                            )}
+                                            {user?.role === 'customer' && (b.booking_type === 'purchase' || b.booking_type === 'rental') && b.doc_status === 'doc_rejected' && (
+                                                <span style={{ color: '#ef4444', fontSize: '0.75rem' }}>❌ Dokumen ditolak, upload ulang</span>
+                                            )}
+                                            {user?.role === 'customer' && (b.booking_type === 'purchase' || b.booking_type === 'rental') && b.doc_status === 'doc_pending' && (
+                                                <span style={{ color: '#f59e0b', fontSize: '0.8rem' }}>⏳ Dokumen menunggu verifikasi</span>
+                                            )}
+                                            {user?.role === 'customer' && b.status === 'confirmed' && (b.booking_type === 'purchase' || b.booking_type === 'rental') && b.doc_status === 'doc_approved' && (
+                                                <button className="btn btn-sm btn-primary" onClick={() => { setPayModal(b); setPayMethod('cash'); }}>
+                                                    💳 Lanjut Bayar
+                                                </button>
+                                            )}
+                                            {user?.role === 'admin' && (b.booking_type === 'purchase' || b.booking_type === 'rental') && b.doc_status === 'doc_pending' && (
+                                                <button className="btn btn-sm" style={{ background: '#8b5cf6', color: '#fff' }} onClick={() => setDocReviewModal(b)}>
+                                                    📋 Review Dokumen
+                                                </button>
+                                            )}
+                                            {user?.role === 'customer' && b.status === 'completed' && b.booking_type === 'survey' && (
+                                                <>
+                                                    <span style={{ color: '#10b981', fontSize: '0.8rem' }}>✅ Survey Selesai</span>
+                                                    <button className="btn btn-sm btn-primary" onClick={() => setDealModal(b)} style={{ marginLeft: 4 }}>
+                                                        🏠 Lanjut Proses
+                                                    </button>
+                                                </>
+                                            )}
+                                            {user?.role === 'customer' && b.status === 'completed' && b.booking_type !== 'survey' && (
+                                                <span style={{ color: '#10b981', fontSize: '0.8rem' }}>✅ Selesai</span>
+                                            )}
+                                            {user?.role === 'customer' && b.booking_type === 'purchase' && b.status === 'pending' && (
+                                                <span style={{ color: '#f59e0b', fontSize: '0.8rem' }}>⏳ Menunggu pembayaran</span>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             )}
 
             {/* ===== PAYMENT MODAL ===== */}
