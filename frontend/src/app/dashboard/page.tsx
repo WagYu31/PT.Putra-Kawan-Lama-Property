@@ -12,6 +12,8 @@ function DashboardContent() {
     const { user, logout, isLoading } = useAuth();
     const router = useRouter();
     const [activeTab, setActiveTab] = useState('overview');
+    const [mobileOpen, setMobileOpen] = useState(false);
+    const isMobile = () => typeof window !== 'undefined' && window.innerWidth <= 768;
     const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
         if (typeof window !== 'undefined') return localStorage.getItem('pkwl_sidebar') === 'collapsed';
         return false;
@@ -91,14 +93,24 @@ function DashboardContent() {
             ];
 
     const toggleSidebar = () => {
-        const next = !sidebarCollapsed;
-        setSidebarCollapsed(next);
-        localStorage.setItem('pkwl_sidebar', next ? 'collapsed' : 'expanded');
+        if (isMobile()) {
+            setMobileOpen(!mobileOpen);
+        } else {
+            const next = !sidebarCollapsed;
+            setSidebarCollapsed(next);
+            localStorage.setItem('pkwl_sidebar', next ? 'collapsed' : 'expanded');
+        }
+    };
+
+    const handleNavClick = (key: string) => {
+        setActiveTab(key);
+        if (isMobile()) setMobileOpen(false);
     };
 
     return (
         <div className={styles.dashboard}>
-            <aside className={`${styles.sidebar} ${sidebarCollapsed ? styles.collapsed : ''}`}>
+            {mobileOpen && <div className={styles.sidebarBackdrop} onClick={() => setMobileOpen(false)} />}
+            <aside className={`${styles.sidebar} ${sidebarCollapsed ? styles.collapsed : ''} ${mobileOpen ? styles.mobileOpen : ''}`}>
                 <div className={styles.sidebarHeader}>
                     <Link href="/" className={styles.logo}>{sidebarCollapsed ? 'P' : 'PKWL'}</Link>
                     {!sidebarCollapsed && <span className={styles.roleTag}>{user.role}</span>}
@@ -108,7 +120,7 @@ function DashboardContent() {
                         <button
                             key={item.key}
                             className={`${styles.navItem} ${activeTab === item.key ? styles.active : ''}`}
-                            onClick={() => setActiveTab(item.key)}
+                            onClick={() => handleNavClick(item.key)}
                             title={sidebarCollapsed ? item.label : undefined}
                         >
                             <span>{item.icon}</span>
@@ -186,7 +198,7 @@ function DashboardContent() {
                             </div>
 
                             {/* Two Column Layout */}
-                            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem', marginTop: '1.5rem' }}>
+                            <div className={styles.overviewColumns}>
                                 {/* Recent Bookings */}
                                 <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.5rem' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
