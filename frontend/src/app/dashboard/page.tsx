@@ -2104,43 +2104,90 @@ function AnalyticsWidget() {
                 ))}
             </div>
 
-            {/* Hourly Chart */}
+            {/* Hourly Chart — Google Analytics Style */}
             <div style={{ marginBottom: '1.25rem' }}>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 600 }}>
-                    📈 Pengunjung 24 Jam Terakhir
-                </p>
-                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 80, padding: '0 2px' }}>
-                    {stats.hourly.map((h, i) => {
-                        const pct = maxHourly > 0 ? (h.count / maxHourly) * 100 : 0;
-                        const now = new Date().getHours();
-                        const isCurrentHour = h.hour === now;
-                        return (
-                            <div
-                                key={i}
-                                title={`${String(h.hour).padStart(2, '0')}:00 — ${h.count} pengunjung`}
-                                style={{
-                                    flex: 1, minWidth: 0,
-                                    height: `${Math.max(pct, 3)}%`,
-                                    background: isCurrentHour
-                                        ? 'linear-gradient(to top, #c9a84c, #e0c068)'
-                                        : h.count > 0
-                                            ? 'linear-gradient(to top, rgba(59,130,246,0.5), rgba(59,130,246,0.8))'
-                                            : 'var(--bg-tertiary)',
-                                    borderRadius: '3px 3px 0 0',
-                                    transition: 'height 0.3s ease',
-                                    cursor: 'pointer',
-                                }}
-                            />
-                        );
-                    })}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                        Pengunjung 24 Jam Terakhir
+                    </p>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                        Total: {stats.hourly.reduce((a, h) => a + h.count, 0)}
+                    </span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-                    <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>00:00</span>
-                    <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>06:00</span>
-                    <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>12:00</span>
-                    <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>18:00</span>
-                    <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>23:00</span>
-                </div>
+                {(() => {
+                    const W = 600, H = 140, PX = 30, PY = 20;
+                    const chartW = W - PX * 2, chartH = H - PY * 2;
+                    const max = Math.max(...stats.hourly.map(h => h.count), 1);
+                    const points = stats.hourly.map((h, i) => ({
+                        x: PX + (i / 23) * chartW,
+                        y: PY + chartH - (h.count / max) * chartH,
+                        count: h.count, hour: h.hour,
+                    }));
+
+                    /* smooth bezier path */
+                    let linePath = `M ${points[0].x} ${points[0].y}`;
+                    for (let i = 1; i < points.length; i++) {
+                        const prev = points[i - 1];
+                        const curr = points[i];
+                        const cpx = (prev.x + curr.x) / 2;
+                        linePath += ` C ${cpx} ${prev.y}, ${cpx} ${curr.y}, ${curr.x} ${curr.y}`;
+                    }
+                    const areaPath = `${linePath} L ${points[points.length - 1].x} ${PY + chartH} L ${points[0].x} ${PY + chartH} Z`;
+                    const nowHour = new Date().getHours();
+                    /* Y-axis ticks */
+                    const yTicks = [0, Math.round(max / 2), max];
+
+                    return (
+                        <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto', overflow: 'visible' }}>
+                            <defs>
+                                <linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="#4285f4" stopOpacity="0.35" />
+                                    <stop offset="100%" stopColor="#4285f4" stopOpacity="0.02" />
+                                </linearGradient>
+                            </defs>
+
+                            {/* Grid lines */}
+                            {yTicks.map((t, i) => {
+                                const y = PY + chartH - (t / max) * chartH;
+                                return (
+                                    <g key={i}>
+                                        <line x1={PX} y1={y} x2={W - PX} y2={y} stroke="var(--border-color)" strokeWidth="0.5" strokeDasharray="3,3" />
+                                        <text x={PX - 6} y={y + 3} fontSize="8" fill="var(--text-muted)" textAnchor="end">{t}</text>
+                                    </g>
+                                );
+                            })}
+
+                            {/* Area fill */}
+                            <path d={areaPath} fill="url(#areaFill)" />
+
+                            {/* Line */}
+                            <path d={linePath} fill="none" stroke="#4285f4" strokeWidth="2" strokeLinejoin="round" />
+
+                            {/* Data dots + tooltips */}
+                            {points.map((p, i) => (
+                                <g key={i}>
+                                    {p.count > 0 && (
+                                        <>
+                                            <circle cx={p.x} cy={p.y} r={p.hour === nowHour ? 5 : 3}
+                                                fill={p.hour === nowHour ? '#c9a84c' : '#4285f4'} stroke="var(--bg-card)" strokeWidth="1.5" />
+                                            <title>{`${String(p.hour).padStart(2, '0')}:00 — ${p.count} pengunjung`}</title>
+                                        </>
+                                    )}
+                                </g>
+                            ))}
+
+                            {/* X-axis labels */}
+                            {[0, 3, 6, 9, 12, 15, 18, 21].map(h => {
+                                const x = PX + (h / 23) * chartW;
+                                return (
+                                    <text key={h} x={x} y={H - 2} fontSize="8" fill="var(--text-muted)" textAnchor="middle">
+                                        {String(h).padStart(2, '0')}:00
+                                    </text>
+                                );
+                            })}
+                        </svg>
+                    );
+                })()}
             </div>
 
             {/* Top Pages */}
