@@ -2110,17 +2110,17 @@ function ProfileManager() {
             {/* Profile Card */}
             <div style={{
                 background: 'var(--bg-card)', border: '1px solid var(--border-color)',
-                borderRadius: 16, overflow: 'hidden',
+                borderRadius: 16,
             }}>
                 {/* Header Banner */}
                 <div style={{
                     height: 100,
                     background: 'linear-gradient(135deg, #c9a84c, #a08535, #c9a84c)',
-                    position: 'relative',
+                    borderRadius: '16px 16px 0 0',
                 }} />
 
                 {/* Avatar + Info */}
-                <div style={{ padding: '0 1.5rem 1.5rem', marginTop: -40 }}>
+                <div style={{ padding: '0 1.5rem 1.5rem', marginTop: -40, position: 'relative', zIndex: 1 }}>
                     <div style={{
                         width: 80, height: 80, borderRadius: '50%',
                         background: 'linear-gradient(135deg, #c9a84c, #e0c068)',
