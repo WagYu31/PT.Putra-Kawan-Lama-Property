@@ -1,5 +1,6 @@
 'use client';
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import PageTracker from '@/components/layout/PageTracker';
 
 type Theme = 'dark' | 'light';
 
@@ -39,6 +40,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
     return (
         <ThemeContext.Provider value={{ theme, toggleTheme }}>
+            <PageTracker />
             {children}
         </ThemeContext.Provider>
     );

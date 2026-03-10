@@ -172,4 +172,9 @@ func Setup(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 		docs.GET("/booking/:booking_id", docHandler.ListByBooking)
 		docs.PATCH("/:id/verify", middleware.RoleRequired(models.RoleAdmin), docHandler.Verify)
 	}
+
+	// Analytics routes
+	analyticsHandler := &handlers.AnalyticsHandler{DB: db}
+	api.POST("/analytics/track", analyticsHandler.Track)
+	api.GET("/analytics/stats", middleware.AuthRequired(cfg), middleware.RoleRequired(models.RoleAdmin), analyticsHandler.Stats)
 }

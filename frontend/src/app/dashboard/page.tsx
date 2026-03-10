@@ -278,6 +278,9 @@ function DashboardContent() {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Live Analytics Widget (Admin Only) */}
+                            {user.role === 'admin' && <AnalyticsWidget />}
                         </div>
                     )}
 
@@ -2027,6 +2030,155 @@ function LiveChatBadge() {
     const { totalUnread } = useLiveChat();
     if (totalUnread <= 0) return null;
     return <span className={styles.chatBadge}>{totalUnread}</span>;
+}
+
+/* ========== ANALYTICS WIDGET ========== */
+function AnalyticsWidget() {
+    const [stats, setStats] = useState<{
+        live_visitors: number; today_visitors: number; today_page_views: number;
+        week_visitors: number; total_page_views: number;
+        top_pages: { page_path: string; count: number }[];
+        hourly: { hour: number; count: number }[];
+    } | null>(null);
+
+    useEffect(() => {
+        const token = localStorage.getItem('pkwl_token');
+        const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
+        const fetchStats = () => {
+            fetch(`${API}/api/analytics/stats`, {
+                headers: { Authorization: `Bearer ${token}` },
+            })
+                .then(r => r.json())
+                .then(d => setStats(d))
+                .catch(() => { });
+        };
+        fetchStats();
+        const interval = setInterval(fetchStats, 10000);
+        return () => clearInterval(interval);
+    }, []);
+
+    if (!stats) return null;
+
+    const maxHourly = Math.max(...stats.hourly.map(h => h.count), 1);
+
+    const pageLabels: Record<string, string> = {
+        '/': 'Beranda',
+        '/properties': 'Daftar Properti',
+        '/about': 'Tentang',
+        '/contact': 'Kontak',
+        '/dashboard': 'Dashboard',
+    };
+
+    return (
+        <div style={{ marginTop: '1.5rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.25rem' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                📊 Analitik Pengunjung
+                <span style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '4px',
+                    background: 'rgba(16,185,129,0.12)', color: '#10b981',
+                    padding: '2px 10px', borderRadius: 20, fontSize: '0.7rem', fontWeight: 700,
+                }}>
+                    <span style={{
+                        width: 6, height: 6, borderRadius: '50%', background: '#10b981',
+                        animation: 'pulse 1.5s ease-in-out infinite',
+                    }} />
+                    LIVE
+                </span>
+            </h3>
+
+            {/* Stats Row */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                {[
+                    { label: 'Aktif Sekarang', value: stats.live_visitors, color: '#10b981', icon: '🟢' },
+                    { label: 'Hari Ini', value: stats.today_visitors, color: '#3b82f6', icon: '👤' },
+                    { label: 'Page Views', value: stats.today_page_views, color: '#f59e0b', icon: '👁' },
+                    { label: 'Minggu Ini', value: stats.week_visitors, color: '#8b5cf6', icon: '📅' },
+                ].map((s, i) => (
+                    <div key={i} style={{
+                        background: `${s.color}10`, border: `1px solid ${s.color}25`,
+                        borderRadius: 12, padding: '0.75rem', textAlign: 'center',
+                    }}>
+                        <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: 4 }}>{s.icon} {s.label}</p>
+                        <p style={{ fontSize: '1.4rem', fontWeight: 700, color: s.color }}>{s.value}</p>
+                    </div>
+                ))}
+            </div>
+
+            {/* Hourly Chart */}
+            <div style={{ marginBottom: '1.25rem' }}>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 600 }}>
+                    📈 Pengunjung 24 Jam Terakhir
+                </p>
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 80, padding: '0 2px' }}>
+                    {stats.hourly.map((h, i) => {
+                        const pct = maxHourly > 0 ? (h.count / maxHourly) * 100 : 0;
+                        const now = new Date().getHours();
+                        const isCurrentHour = h.hour === now;
+                        return (
+                            <div
+                                key={i}
+                                title={`${String(h.hour).padStart(2, '0')}:00 — ${h.count} pengunjung`}
+                                style={{
+                                    flex: 1, minWidth: 0,
+                                    height: `${Math.max(pct, 3)}%`,
+                                    background: isCurrentHour
+                                        ? 'linear-gradient(to top, #c9a84c, #e0c068)'
+                                        : h.count > 0
+                                            ? 'linear-gradient(to top, rgba(59,130,246,0.5), rgba(59,130,246,0.8))'
+                                            : 'var(--bg-tertiary)',
+                                    borderRadius: '3px 3px 0 0',
+                                    transition: 'height 0.3s ease',
+                                    cursor: 'pointer',
+                                }}
+                            />
+                        );
+                    })}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+                    <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>00:00</span>
+                    <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>06:00</span>
+                    <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>12:00</span>
+                    <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>18:00</span>
+                    <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>23:00</span>
+                </div>
+            </div>
+
+            {/* Top Pages */}
+            {stats.top_pages && stats.top_pages.length > 0 && (
+                <div>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 600 }}>
+                        🔗 Halaman Terpopuler
+                    </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                        {stats.top_pages.map((p, i) => {
+                            const maxCount = stats.top_pages[0]?.count || 1;
+                            const pct = (p.count / maxCount) * 100;
+                            return (
+                                <div key={i} style={{
+                                    display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                    padding: '0.4rem 0.6rem', borderRadius: 8,
+                                    background: 'var(--bg-tertiary)',
+                                }}>
+                                    <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', width: 16, textAlign: 'center', fontWeight: 700 }}>{i + 1}</span>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        <p style={{ fontSize: '0.75rem', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            {pageLabels[p.page_path] || p.page_path}
+                                        </p>
+                                        <div style={{ width: '100%', height: 3, background: 'var(--bg-secondary)', borderRadius: 2, marginTop: 3 }}>
+                                            <div style={{ width: `${pct}%`, height: '100%', background: 'var(--gold-primary)', borderRadius: 2, transition: 'width 0.3s' }} />
+                                        </div>
+                                    </div>
+                                    <span style={{ fontSize: '0.7rem', color: 'var(--gold-primary)', fontWeight: 600, flexShrink: 0 }}>{p.count}</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
+            <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }`}</style>
+        </div>
+    );
 }
 
 export default function DashboardPage() {
