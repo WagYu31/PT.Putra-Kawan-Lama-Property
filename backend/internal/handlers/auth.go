@@ -51,9 +51,6 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	}
 
 	role := models.RoleCustomer
-	if input.Role == "owner" {
-		role = models.RoleOwner
-	}
 
 	user := models.User{
 		Name:     input.Name,
