@@ -447,33 +447,35 @@ function PropertyManager() {
     return (
         <>
             <div className={styles.tableContainer}>
-                <div className={styles.tableHeader}>
+                <div className={styles.tableHeader} style={{ flexWrap: 'wrap', gap: 8 }}>
                     <h2>Daftar Properti</h2>
-                    <button className="btn btn-primary btn-sm" onClick={openNew}>+ Tambah Properti</button>
+                    <button className="btn btn-primary btn-sm" onClick={openNew} style={{ whiteSpace: 'nowrap' }}>+ Tambah Properti</button>
                 </div>
                 {loading ? <p style={{ color: 'var(--text-muted)' }}>Memuat data...</p> : (
-                    <table className={styles.table}>
-                        <thead>
-                            <tr><th>Properti</th><th>Tipe</th><th>Harga</th><th>Status</th><th>Views</th><th>Aksi</th></tr>
-                        </thead>
-                        <tbody>
-                            {properties.length === 0 ? (
-                                <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Belum ada properti. Klik &quot;+ Tambah Properti&quot; untuk menambahkan.</td></tr>
-                            ) : properties.map(p => (
-                                <tr key={p.id}>
-                                    <td>{p.title}</td>
-                                    <td><span className={`badge ${typeBadge[p.type] || 'badge-gold'}`}>{typeLabel[p.type] || p.type}</span></td>
-                                    <td>{fmtPrice(p.price)}{p.type === 'rent' ? '/bln' : ''}</td>
-                                    <td><span className={`badge ${p.status === 'available' ? 'badge-success' : 'badge-warning'}`}>{p.status}</span></td>
-                                    <td>{p.views || 0}</td>
-                                    <td style={{ display: 'flex', gap: '6px' }}>
-                                        <button className="btn btn-ghost btn-sm" onClick={() => openEdit(p)}>Edit</button>
-                                        <button className="btn btn-ghost btn-sm" style={{ color: '#ef4444' }} onClick={() => handleDelete(p.id)}>Hapus</button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                    <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                        <table className={styles.table}>
+                            <thead>
+                                <tr><th>Properti</th><th>Tipe</th><th>Harga</th><th>Status</th><th>Views</th><th>Aksi</th></tr>
+                            </thead>
+                            <tbody>
+                                {properties.length === 0 ? (
+                                    <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Belum ada properti. Klik &quot;+ Tambah Properti&quot; untuk menambahkan.</td></tr>
+                                ) : properties.map(p => (
+                                    <tr key={p.id}>
+                                        <td>{p.title}</td>
+                                        <td><span className={`badge ${typeBadge[p.type] || 'badge-gold'}`}>{typeLabel[p.type] || p.type}</span></td>
+                                        <td style={{ whiteSpace: 'nowrap' }}>{fmtPrice(p.price)}{p.type === 'rent' ? '/bln' : ''}</td>
+                                        <td><span className={`badge ${p.status === 'available' ? 'badge-success' : 'badge-warning'}`}>{p.status}</span></td>
+                                        <td>{p.views || 0}</td>
+                                        <td style={{ display: 'flex', gap: '6px' }}>
+                                            <button className="btn btn-ghost btn-sm" onClick={() => openEdit(p)}>Edit</button>
+                                            <button className="btn btn-ghost btn-sm" style={{ color: '#ef4444' }} onClick={() => handleDelete(p.id)}>Hapus</button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
             </div>
 
