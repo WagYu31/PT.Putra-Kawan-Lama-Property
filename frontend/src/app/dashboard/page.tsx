@@ -292,16 +292,18 @@ function DashboardContent() {
                     {activeTab === 'users' && user.role === 'admin' && (
                         <div className={styles.tableContainer}>
                             <h2>Manajemen User</h2>
-                            <table className={styles.table}>
-                                <thead>
-                                    <tr><th>Nama</th><th>Email</th><th>Role</th><th>Aksi</th></tr>
-                                </thead>
-                                <tbody>
-                                    <tr><td>Admin PKWL</td><td>admin@putrakawanlama.com</td><td><span className="badge badge-gold">Admin</span></td><td>—</td></tr>
-                                    <tr><td>Budi Santoso</td><td>owner@putrakawanlama.com</td><td><span className="badge badge-warning">Owner</span></td><td><button className="btn btn-ghost btn-sm">Edit Role</button></td></tr>
-                                    <tr><td>Siti Rahayu</td><td>customer@putrakawanlama.com</td><td><span className="badge badge-success">Customer</span></td><td><button className="btn btn-ghost btn-sm">Edit Role</button></td></tr>
-                                </tbody>
-                            </table>
+                            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                                <table className={styles.table}>
+                                    <thead>
+                                        <tr><th>Nama</th><th>Email</th><th>Role</th><th>Aksi</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td>Admin PKWL</td><td>admin@putrakawanlama.com</td><td><span className="badge badge-gold">Admin</span></td><td>—</td></tr>
+                                        <tr><td>Budi Santoso</td><td>owner@putrakawanlama.com</td><td><span className="badge badge-warning">Owner</span></td><td><button className="btn btn-ghost btn-sm">Edit Role</button></td></tr>
+                                        <tr><td>Siti Rahayu</td><td>customer@putrakawanlama.com</td><td><span className="badge badge-success">Customer</span></td><td><button className="btn btn-ghost btn-sm">Edit Role</button></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     )}
 
