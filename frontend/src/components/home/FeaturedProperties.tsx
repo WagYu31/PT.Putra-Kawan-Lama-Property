@@ -33,7 +33,7 @@ export default function FeaturedProperties() {
     const [properties, setProperties] = useState<Property[]>([]);
 
     useEffect(() => {
-        api<{ properties: Property[] }>('/api/properties')
+        api<{ properties: Property[] }>('/api/properties?status=available')
             .then(data => {
                 const all = data.properties || [];
                 /* Show featured properties first, then most recent, max 6 */

@@ -44,7 +44,7 @@ export default function PropertiesPage() {
     const [favIds, setFavIds] = useState<number[]>([]);
 
     useEffect(() => {
-        api<{ properties: Property[] }>('/api/properties')
+        api<{ properties: Property[] }>('/api/properties?status=available')
             .then(data => setProperties(data.properties || []))
             .catch(() => setProperties([]))
             .finally(() => setLoading(false));
