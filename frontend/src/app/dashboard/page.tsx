@@ -1681,8 +1681,8 @@ function CicilanManager() {
                         }}>
                             {/* Header */}
                             <div onClick={() => setExpandedBooking(isExp ? null : bk.id)} style={{
-                                padding: '20px 24px', cursor: 'pointer',
-                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                padding: '20px 16px', cursor: 'pointer',
+                                display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8,
                             }}>
                                 <div>
                                     <h3 style={{ marginBottom: 4, fontSize: '1rem' }}>{bk.property?.title || 'Properti'}</h3>
@@ -1695,7 +1695,7 @@ function CicilanManager() {
                                         {fmtP(bk.total_price)} • Cicilan {bk.installment_tenor || 12} bulan
                                     </p>
                                 </div>
-                                <div style={{ textAlign: 'right' }}>
+                                <div style={{ textAlign: 'right', flexShrink: 0 }}>
                                     <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 4 }}>
                                         {paidCount}/{totalCount} terbayar
                                     </p>
@@ -1704,7 +1704,7 @@ function CicilanManager() {
                             </div>
 
                             {/* Progress */}
-                            <div style={{ padding: '0 24px 16px' }}>
+                            <div style={{ padding: '0 16px 16px' }}>
                                 <div style={{ height: 8, borderRadius: 4, background: 'rgba(255,255,255,0.05)', overflow: 'hidden' }}>
                                     <div style={{
                                         height: '100%', borderRadius: 4, width: `${progress}%`,
@@ -1722,8 +1722,8 @@ function CicilanManager() {
 
                             {/* Installment table */}
                             {isExp && (
-                                <div style={{ padding: '0 24px 24px' }}>
-                                    <table className={styles.table} style={{ marginTop: 0 }}>
+                                <div style={{ padding: '0 16px 16px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                                    <table className={styles.table} style={{ marginTop: 0, minWidth: 520 }}>
                                         <thead>
                                             <tr><th>#</th><th>Keterangan</th><th>Jumlah</th><th>Jatuh Tempo</th><th>Status</th><th>Aksi</th></tr>
                                         </thead>

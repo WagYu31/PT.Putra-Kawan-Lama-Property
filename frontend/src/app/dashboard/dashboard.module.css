@@ -911,6 +911,16 @@
         overflow-x: hidden;
     }
 
+    .tableContainer {
+        padding: 14px 10px;
+        overflow: hidden;
+    }
+
+    .tableContainer h2 {
+        font-size: 1rem;
+        margin-bottom: 12px;
+    }
+
     /* Stat cards */
     .overviewGrid {
         grid-template-columns: repeat(2, 1fr) !important;
