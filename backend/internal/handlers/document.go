@@ -7,12 +7,14 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/putra-kawan-lama/backend/internal/config"
 	"github.com/putra-kawan-lama/backend/internal/models"
 	"gorm.io/gorm"
 )
 
 type DocumentHandler struct {
-	DB *gorm.DB
+	DB  *gorm.DB
+	Cfg *config.Config
 }
 
 // Upload handles document file upload for a booking
@@ -189,11 +191,16 @@ func (h *DocumentHandler) Verify(c *gin.Context) {
 
 	if allApproved {
 		h.DB.Model(&booking).Update("doc_status", "doc_approved")
-		// Create notification for customer
 		title := "✅ Dokumen Disetujui"
 		msg := "Semua dokumen Anda telah diverifikasi. Silakan lanjutkan pembayaran."
 		bid := booking.ID
 		CreateNotification(h.DB, booking.CustomerID, title, msg, models.NotifPaymentSuccess, &bid)
+		// Send email
+		var customer models.User
+		h.DB.First(&customer, booking.CustomerID)
+		var prop models.Property
+		h.DB.First(&prop, booking.PropertyID)
+		go SendDocumentStatusEmail(h.Cfg, customer.Name, customer.Email, prop.Title, "", "all_approved", "")
 	} else if hasRejected {
 		h.DB.Model(&booking).Update("doc_status", "doc_rejected")
 		title := "❌ Dokumen Ditolak"
@@ -201,6 +208,13 @@ func (h *DocumentHandler) Verify(c *gin.Context) {
 			models.DocTypeLabel(doc.Type), req.Reason)
 		bid := booking.ID
 		CreateNotification(h.DB, booking.CustomerID, title, msg, models.NotifPaymentSuccess, &bid)
+		// Send email
+		var customer models.User
+		h.DB.First(&customer, booking.CustomerID)
+		var prop models.Property
+		h.DB.First(&prop, booking.PropertyID)
+		go SendDocumentStatusEmail(h.Cfg, customer.Name, customer.Email, prop.Title,
+			models.DocTypeLabel(doc.Type), "rejected", req.Reason)
 	} else {
 		h.DB.Model(&booking).Update("doc_status", "doc_pending")
 	}

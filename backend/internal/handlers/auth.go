@@ -81,6 +81,9 @@ func (h *AuthHandler) Register(c *gin.Context) {
 			"role":  user.Role,
 		},
 	})
+
+	// Send welcome email (async)
+	go SendWelcomeEmail(h.Cfg, user.Name, user.Email)
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {

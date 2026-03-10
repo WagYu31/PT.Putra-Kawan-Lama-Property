@@ -1,18 +1,22 @@
 package handlers
 
 import (
+	"fmt"
+	"log"
 	"math"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/putra-kawan-lama/backend/internal/config"
 	"github.com/putra-kawan-lama/backend/internal/models"
 	"gorm.io/gorm"
 )
 
 type BookingHandler struct {
-	DB *gorm.DB
+	DB  *gorm.DB
+	Cfg *config.Config
 }
 
 // CreateSurvey schedules a property survey (for sell properties)
@@ -77,6 +81,11 @@ func (h *BookingHandler) CreateSurvey(c *gin.Context) {
 		"message": "Survey scheduled successfully",
 		"booking": booking,
 	})
+
+	// Send booking email (async)
+	go SendBookingCreatedEmail(h.Cfg, booking.Customer.Name, booking.Customer.Email,
+		booking.Property.Title, string(booking.BookingType),
+		fmt.Sprintf("Survey tanggal %s", surveyDate.Format("02 Jan 2006")))
 }
 
 // CreatePurchase creates a purchase booking (after survey)
@@ -145,6 +154,14 @@ func (h *BookingHandler) CreatePurchase(c *gin.Context) {
 		"message": "Booking created, proceed to payment",
 		"booking": booking,
 	})
+
+	// Send booking email (async)
+	detail := fmt.Sprintf("Pembayaran: %s", input.PaymentMethod)
+	if input.PaymentMethod == "installment" {
+		detail = fmt.Sprintf("Cicilan %d bulan", input.Tenor)
+	}
+	go SendBookingCreatedEmail(h.Cfg, booking.Customer.Name, booking.Customer.Email,
+		booking.Property.Title, string(booking.BookingType), detail)
 }
 
 // CreateRental creates a rental booking
@@ -231,6 +248,11 @@ func (h *BookingHandler) CreateRental(c *gin.Context) {
 		"total_price": totalPrice,
 		"duration":    input.Duration,
 	})
+
+	// Send booking email (async)
+	go SendBookingCreatedEmail(h.Cfg, booking.Customer.Name, booking.Customer.Email,
+		booking.Property.Title, string(booking.BookingType),
+		fmt.Sprintf("Sewa %d %s", input.Duration, input.RentPeriod))
 }
 
 // List lists bookings
@@ -295,13 +317,18 @@ func (h *BookingHandler) UpdateStatus(c *gin.Context) {
 	}
 
 	var booking models.Booking
-	if err := h.DB.First(&booking, id).Error; err != nil {
+	if err := h.DB.Preload("Property").Preload("Customer").First(&booking, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Booking not found"})
 		return
 	}
 
 	h.DB.Model(&booking).Update("status", input.Status)
 	c.JSON(http.StatusOK, gin.H{"message": "Booking status updated"})
+
+	// Send status update email (async)
+	go SendBookingStatusEmail(h.Cfg, booking.Customer.Name, booking.Customer.Email,
+		booking.Property.Title, input.Status)
+	log.Printf("📧 Booking status email queued: %s → %s", booking.Customer.Email, input.Status)
 }
 
 // GetByID gets a single booking by ID

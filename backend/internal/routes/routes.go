@@ -23,7 +23,7 @@ func Setup(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	// Initialize handlers
 	authHandler := &handlers.AuthHandler{DB: db, Cfg: cfg}
 	propertyHandler := &handlers.PropertyHandler{DB: db}
-	bookingHandler := &handlers.BookingHandler{DB: db}
+	bookingHandler := &handlers.BookingHandler{DB: db, Cfg: cfg}
 	paymentHandler := &handlers.PaymentHandler{DB: db, Cfg: cfg}
 	inquiryHandler := &handlers.InquiryHandler{DB: db}
 	uploadHandler := &handlers.UploadHandler{Cfg: cfg}
@@ -168,7 +168,7 @@ func Setup(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	}
 
 	// Document routes (protected)
-	docHandler := &handlers.DocumentHandler{DB: db}
+	docHandler := &handlers.DocumentHandler{DB: db, Cfg: cfg}
 	docs := api.Group("/documents")
 	docs.Use(middleware.AuthRequired(cfg))
 	{
