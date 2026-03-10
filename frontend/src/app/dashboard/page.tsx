@@ -78,21 +78,18 @@ function DashboardContent() {
             { key: 'bookings', label: 'Booking', icon: '📋' },
             { key: 'payments', label: 'Pembayaran', icon: '💰' },
             { key: 'inquiries', label: 'Inquiry', icon: '📩' },
-            { key: 'profile', label: 'Profil', icon: '👤' },
         ]
         : user.role === 'owner'
             ? [
                 { key: 'overview', label: 'Overview', icon: '📊' },
                 { key: 'properties', label: 'Properti Saya', icon: '🏠' },
                 { key: 'bookings', label: 'Booking', icon: '📋' },
-                { key: 'profile', label: 'Profil', icon: '👤' },
             ]
             : [
                 { key: 'overview', label: 'Overview', icon: '📊' },
                 { key: 'bookings', label: 'Booking Saya', icon: '📋' },
                 { key: 'payments', label: 'Pembayaran', icon: '💰' },
                 { key: 'saved', label: 'Favorit', icon: '❤️' },
-                { key: 'profile', label: 'Profil', icon: '👤' },
             ];
 
     const toggleSidebar = () => {
@@ -133,7 +130,7 @@ function DashboardContent() {
                     ))}
                 </nav>
                 <div className={styles.sidebarFooter}>
-                    <div className={styles.userInfo}>
+                    <div className={styles.userInfo} onClick={() => handleNavClick('profile')} style={{ cursor: 'pointer' }} title="Profil Saya">
                         <div className={styles.avatar}>{user.name.charAt(0)}</div>
                         {!sidebarCollapsed && (
                             <div>
