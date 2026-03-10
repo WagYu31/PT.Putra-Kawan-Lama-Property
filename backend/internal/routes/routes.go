@@ -44,6 +44,7 @@ func Setup(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	{
 		authProtected.GET("/me", authHandler.GetProfile)
 		authProtected.PUT("/profile", authHandler.UpdateProfile)
+		authProtected.PUT("/password", authHandler.ChangePassword)
 	}
 
 	// Property routes (public)
@@ -69,6 +70,9 @@ func Setup(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 		upload.POST("", uploadHandler.Upload)
 		upload.POST("/multiple", uploadHandler.UploadMultiple)
 	}
+
+	// Avatar upload (all authenticated users)
+	api.POST("/upload/avatar", middleware.AuthRequired(cfg), uploadHandler.Upload)
 
 	// === SURVEY, BOOKING & RENTAL ===
 	customerAuth := middleware.AuthRequired(cfg)

@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AuthProvider, useAuth } from '@/lib/auth';
@@ -2043,10 +2043,18 @@ function ProfileManager() {
     const [phone, setPhone] = useState('');
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState('');
+    const [uploading, setUploading] = useState(false);
+    const [oldPassword, setOldPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [pwMsg, setPwMsg] = useState('');
+    const [changingPw, setChangingPw] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
 
     useEffect(() => {
         const token = localStorage.getItem('pkwl_token');
-        const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
         fetch(`${API}/api/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
             .then(r => r.json())
             .then(d => {
@@ -2055,14 +2063,50 @@ function ProfileManager() {
                 setPhone(d.user?.phone || d.phone || '');
             })
             .catch(() => { });
-    }, []);
+    }, [API]);
+
+    const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploading(true);
+        try {
+            const token = localStorage.getItem('pkwl_token');
+            const formData = new FormData();
+            formData.append('file', file);
+            const upRes = await fetch(`${API}/api/upload/avatar`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+                body: formData,
+            });
+            if (upRes.ok) {
+                const upData = await upRes.json();
+                const avatarUrl = upData.url;
+                // Update profile with new avatar URL
+                const res = await fetch(`${API}/api/auth/profile`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ avatar: avatarUrl }),
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setProfile(data.user || data);
+                    setMessage('✅ Foto profil berhasil diperbarui!');
+                }
+            } else {
+                setMessage('❌ Gagal upload foto');
+            }
+        } catch {
+            setMessage('❌ Gagal upload foto');
+        }
+        setUploading(false);
+        setTimeout(() => setMessage(''), 3000);
+    };
 
     const handleSave = async () => {
         setSaving(true);
         setMessage('');
         try {
             const token = localStorage.getItem('pkwl_token');
-            const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
             const res = await fetch(`${API}/api/auth/profile`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -2082,6 +2126,40 @@ function ProfileManager() {
         setTimeout(() => setMessage(''), 3000);
     };
 
+    const handleChangePassword = async () => {
+        setPwMsg('');
+        if (newPassword !== confirmPassword) {
+            setPwMsg('❌ Password baru tidak cocok');
+            return;
+        }
+        if (newPassword.length < 6) {
+            setPwMsg('❌ Password minimal 6 karakter');
+            return;
+        }
+        setChangingPw(true);
+        try {
+            const token = localStorage.getItem('pkwl_token');
+            const res = await fetch(`${API}/api/auth/password`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setPwMsg('✅ Password berhasil diubah!');
+                setOldPassword('');
+                setNewPassword('');
+                setConfirmPassword('');
+            } else {
+                setPwMsg(`❌ ${data.error || 'Gagal mengubah password'}`);
+            }
+        } catch {
+            setPwMsg('❌ Terjadi kesalahan');
+        }
+        setChangingPw(false);
+        setTimeout(() => setPwMsg(''), 4000);
+    };
+
     if (!profile) return <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Memuat profil...</div>;
 
     const roleBadge: Record<string, { label: string; color: string; bg: string }> = {
@@ -2090,12 +2168,13 @@ function ProfileManager() {
         customer: { label: 'Customer', color: '#3b82f6', bg: 'rgba(59,130,246,0.12)' },
     };
     const badge = roleBadge[profile.role] || roleBadge.customer;
+    const avatarUrl = profile.avatar ? `${API}${profile.avatar}` : '';
 
     const inputStyle: React.CSSProperties = {
         width: '100%', padding: '12px 16px', borderRadius: 10,
         border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)',
         color: 'var(--text-primary)', fontSize: '0.9rem', outline: 'none',
-        transition: 'border-color 0.2s',
+        transition: 'border-color 0.2s', boxSizing: 'border-box',
     };
     const labelStyle: React.CSSProperties = {
         display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)',
@@ -2103,7 +2182,7 @@ function ProfileManager() {
     };
 
     return (
-        <div style={{ maxWidth: 600, margin: '0 auto' }}>
+        <div style={{ maxWidth: 600, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {/* Profile Card */}
             <div style={{
                 background: 'var(--bg-card)', border: '1px solid var(--border-color)',
@@ -2118,18 +2197,46 @@ function ProfileManager() {
 
                 {/* Avatar + Info */}
                 <div style={{ padding: '0 1.5rem 1.5rem', marginTop: -40, position: 'relative', zIndex: 1 }}>
-                    <div style={{
-                        width: 80, height: 80, borderRadius: '50%',
-                        background: 'linear-gradient(135deg, #c9a84c, #e0c068)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '2rem', fontWeight: 700, color: '#1a1a2e',
-                        border: '4px solid var(--bg-card)',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                    }}>
-                        {(profile.name || 'U').charAt(0).toUpperCase()}
+                    {/* Clickable Avatar */}
+                    <div
+                        onClick={() => fileInputRef.current?.click()}
+                        style={{
+                            width: 80, height: 80, borderRadius: '50%',
+                            background: avatarUrl ? 'transparent' : 'linear-gradient(135deg, #c9a84c, #e0c068)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '2rem', fontWeight: 700, color: '#1a1a2e',
+                            border: '4px solid var(--bg-card)',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                            cursor: 'pointer', position: 'relative', overflow: 'hidden',
+                        }}
+                    >
+                        {avatarUrl ? (
+                            <img src={avatarUrl} alt="Avatar"
+                                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                        ) : (
+                            (profile.name || 'U').charAt(0).toUpperCase()
+                        )}
+                        {/* Upload overlay */}
+                        <div style={{
+                            position: 'absolute', bottom: 0, left: 0, right: 0,
+                            height: '50%', background: 'rgba(0,0,0,0.5)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '0.6rem', color: '#fff', fontWeight: 600,
+                            opacity: uploading ? 1 : 0,
+                            transition: 'opacity 0.2s',
+                        }}>
+                            {uploading ? '⏳' : '📷'}
+                        </div>
+                        <input
+                            ref={fileInputRef}
+                            type="file" accept="image/*"
+                            style={{ display: 'none' }}
+                            onChange={handleAvatarUpload}
+                        />
                     </div>
+                    <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', margin: '6px 0 0' }}>Klik foto untuk ubah</p>
 
-                    <div style={{ marginTop: 12, marginBottom: 20 }}>
+                    <div style={{ marginTop: 8, marginBottom: 20 }}>
                         <h2 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                             {profile.name}
                         </h2>
@@ -2206,6 +2313,65 @@ function ProfileManager() {
                         {saving ? 'Menyimpan...' : '💾 Simpan Perubahan'}
                     </button>
                 </div>
+            </div>
+
+            {/* Password Change Card */}
+            <div style={{
+                background: 'var(--bg-card)', border: '1px solid var(--border-color)',
+                borderRadius: 16, padding: '1.5rem',
+            }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 1rem' }}>
+                    🔒 Ubah Sandi
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div>
+                        <label style={labelStyle}>Password Lama</label>
+                        <input
+                            type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)}
+                            style={inputStyle} placeholder="Masukkan password lama"
+                        />
+                    </div>
+                    <div>
+                        <label style={labelStyle}>Password Baru</label>
+                        <input
+                            type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)}
+                            style={inputStyle} placeholder="Minimal 6 karakter"
+                        />
+                    </div>
+                    <div>
+                        <label style={labelStyle}>Konfirmasi Password Baru</label>
+                        <input
+                            type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
+                            style={inputStyle} placeholder="Ulangi password baru"
+                        />
+                    </div>
+                </div>
+                {pwMsg && (
+                    <div style={{
+                        marginTop: 16, padding: '10px 16px', borderRadius: 10,
+                        background: pwMsg.startsWith('✅') ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+                        color: pwMsg.startsWith('✅') ? '#10b981' : '#ef4444',
+                        fontSize: '0.85rem', fontWeight: 600,
+                    }}>
+                        {pwMsg}
+                    </div>
+                )}
+                <button
+                    onClick={handleChangePassword} disabled={changingPw || !oldPassword || !newPassword || !confirmPassword}
+                    style={{
+                        marginTop: 16, width: '100%', padding: '14px',
+                        background: oldPassword && newPassword && confirmPassword
+                            ? 'linear-gradient(135deg, #6366f1, #818cf8)' : 'var(--bg-tertiary)',
+                        color: oldPassword && newPassword && confirmPassword ? '#fff' : 'var(--text-muted)',
+                        border: 'none', borderRadius: 12,
+                        fontSize: '0.95rem', fontWeight: 700,
+                        cursor: changingPw || !oldPassword || !newPassword || !confirmPassword ? 'not-allowed' : 'pointer',
+                        opacity: changingPw ? 0.7 : 1,
+                        transition: 'all 0.2s',
+                    }}
+                >
+                    {changingPw ? 'Mengubah...' : '🔑 Ubah Password'}
+                </button>
             </div>
         </div>
     );

@@ -191,3 +191,36 @@ func (h *AuthHandler) generateToken(user *models.User) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(h.Cfg.JWTSecret))
 }
+
+func (h *AuthHandler) ChangePassword(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	var user models.User
+	if err := h.DB.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	var input struct {
+		OldPassword string `json:"old_password" binding:"required"`
+		NewPassword string `json:"new_password" binding:"required,min=6"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Password baru minimal 6 karakter"})
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.OldPassword)); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Password lama salah"})
+		return
+	}
+
+	hashed, err := bcrypt.GenerateFromPassword([]byte(input.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengubah password"})
+		return
+	}
+
+	user.Password = string(hashed)
+	h.DB.Save(&user)
+	c.JSON(http.StatusOK, gin.H{"message": "Password berhasil diubah"})
+}
