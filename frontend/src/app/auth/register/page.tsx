@@ -10,7 +10,7 @@ function RegisterForm() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [phone, setPhone] = useState('');
-    const [role, setRole] = useState('customer');
+
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const { register } = useAuth();
@@ -21,7 +21,7 @@ function RegisterForm() {
         setError('');
         setLoading(true);
         try {
-            await register({ name, email, password, phone, role });
+            await register({ name, email, password, phone, role: 'customer' });
             router.push('/dashboard');
         } catch (err: any) {
             setError(err.message || 'Registrasi gagal');
@@ -57,13 +57,7 @@ function RegisterForm() {
                             <label className="form-label">No. Telepon</label>
                             <input type="tel" className="form-input" placeholder="081234567890" value={phone} onChange={e => setPhone(e.target.value)} />
                         </div>
-                        <div className="form-group">
-                            <label className="form-label">Daftar Sebagai</label>
-                            <select className="form-select" value={role} onChange={e => setRole(e.target.value)}>
-                                <option value="customer">Customer (Pencari Properti)</option>
-                                <option value="owner">Owner (Pemilik Properti)</option>
-                            </select>
-                        </div>
+
                         <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%' }} disabled={loading}>
                             {loading ? 'Memproses...' : 'Daftar'}
                         </button>
