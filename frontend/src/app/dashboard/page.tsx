@@ -78,18 +78,21 @@ function DashboardContent() {
             { key: 'bookings', label: 'Booking', icon: '📋' },
             { key: 'payments', label: 'Pembayaran', icon: '💰' },
             { key: 'inquiries', label: 'Inquiry', icon: '📩' },
+            { key: 'profile', label: 'Profil', icon: '👤' },
         ]
         : user.role === 'owner'
             ? [
                 { key: 'overview', label: 'Overview', icon: '📊' },
                 { key: 'properties', label: 'Properti Saya', icon: '🏠' },
                 { key: 'bookings', label: 'Booking', icon: '📋' },
+                { key: 'profile', label: 'Profil', icon: '👤' },
             ]
             : [
                 { key: 'overview', label: 'Overview', icon: '📊' },
                 { key: 'bookings', label: 'Booking Saya', icon: '📋' },
                 { key: 'payments', label: 'Pembayaran', icon: '💰' },
                 { key: 'saved', label: 'Favorit', icon: '❤️' },
+                { key: 'profile', label: 'Profil', icon: '👤' },
             ];
 
     const toggleSidebar = () => {
@@ -327,6 +330,8 @@ function DashboardContent() {
                             <p>Belum ada data yang tersedia untuk ditampilkan</p>
                         </div>
                     )}
+
+                    {activeTab === 'profile' && <ProfileManager />}
                 </div>
             </main>
         </div>
@@ -2030,6 +2035,183 @@ function LiveChatBadge() {
     const { totalUnread } = useLiveChat();
     if (totalUnread <= 0) return null;
     return <span className={styles.chatBadge}>{totalUnread}</span>;
+}
+
+/* ========== PROFILE MANAGER ========== */
+function ProfileManager() {
+    const { user } = useAuth();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [profile, setProfile] = useState<any>(null);
+    const [name, setName] = useState('');
+    const [phone, setPhone] = useState('');
+    const [saving, setSaving] = useState(false);
+    const [message, setMessage] = useState('');
+
+    useEffect(() => {
+        const token = localStorage.getItem('pkwl_token');
+        const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
+        fetch(`${API}/api/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
+            .then(r => r.json())
+            .then(d => {
+                setProfile(d.user || d);
+                setName(d.user?.name || d.name || '');
+                setPhone(d.user?.phone || d.phone || '');
+            })
+            .catch(() => { });
+    }, []);
+
+    const handleSave = async () => {
+        setSaving(true);
+        setMessage('');
+        try {
+            const token = localStorage.getItem('pkwl_token');
+            const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
+            const res = await fetch(`${API}/api/auth/profile`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ name, phone }),
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setProfile(data.user || data);
+                setMessage('✅ Profil berhasil diperbarui!');
+            } else {
+                setMessage('❌ Gagal memperbarui profil');
+            }
+        } catch {
+            setMessage('❌ Terjadi kesalahan');
+        }
+        setSaving(false);
+        setTimeout(() => setMessage(''), 3000);
+    };
+
+    if (!profile) return <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Memuat profil...</div>;
+
+    const roleBadge: Record<string, { label: string; color: string; bg: string }> = {
+        admin: { label: 'Administrator', color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
+        owner: { label: 'Owner', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
+        customer: { label: 'Customer', color: '#3b82f6', bg: 'rgba(59,130,246,0.12)' },
+    };
+    const badge = roleBadge[profile.role] || roleBadge.customer;
+
+    const inputStyle: React.CSSProperties = {
+        width: '100%', padding: '12px 16px', borderRadius: 10,
+        border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)',
+        color: 'var(--text-primary)', fontSize: '0.9rem', outline: 'none',
+        transition: 'border-color 0.2s',
+    };
+    const labelStyle: React.CSSProperties = {
+        display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)',
+        marginBottom: 6, fontWeight: 600,
+    };
+
+    return (
+        <div style={{ maxWidth: 600, margin: '0 auto' }}>
+            {/* Profile Card */}
+            <div style={{
+                background: 'var(--bg-card)', border: '1px solid var(--border-color)',
+                borderRadius: 16, overflow: 'hidden',
+            }}>
+                {/* Header Banner */}
+                <div style={{
+                    height: 100,
+                    background: 'linear-gradient(135deg, #c9a84c, #a08535, #c9a84c)',
+                    position: 'relative',
+                }} />
+
+                {/* Avatar + Info */}
+                <div style={{ padding: '0 1.5rem 1.5rem', marginTop: -40 }}>
+                    <div style={{
+                        width: 80, height: 80, borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #c9a84c, #e0c068)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '2rem', fontWeight: 700, color: '#1a1a2e',
+                        border: '4px solid var(--bg-card)',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                    }}>
+                        {(profile.name || 'U').charAt(0).toUpperCase()}
+                    </div>
+
+                    <div style={{ marginTop: 12, marginBottom: 20 }}>
+                        <h2 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+                            {profile.name}
+                        </h2>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '4px 0 8px' }}>{profile.email}</p>
+                        <span style={{
+                            display: 'inline-block', padding: '3px 12px', borderRadius: 20,
+                            fontSize: '0.7rem', fontWeight: 700,
+                            color: badge.color, background: badge.bg,
+                        }}>
+                            {badge.label}
+                        </span>
+                    </div>
+
+                    <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '0 0 20px' }} />
+
+                    {/* Form */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <div>
+                            <label style={labelStyle}>Nama Lengkap</label>
+                            <input
+                                type="text" value={name} onChange={e => setName(e.target.value)}
+                                style={inputStyle} placeholder="Masukkan nama"
+                            />
+                        </div>
+                        <div>
+                            <label style={labelStyle}>Email</label>
+                            <input
+                                type="email" value={profile.email} disabled
+                                style={{ ...inputStyle, opacity: 0.5, cursor: 'not-allowed' }}
+                            />
+                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 4, display: 'block' }}>
+                                Email tidak dapat diubah
+                            </span>
+                        </div>
+                        <div>
+                            <label style={labelStyle}>No. Telepon</label>
+                            <input
+                                type="tel" value={phone} onChange={e => setPhone(e.target.value)}
+                                style={inputStyle} placeholder="08xx-xxxx-xxxx"
+                            />
+                        </div>
+                        <div>
+                            <label style={labelStyle}>Akun dibuat</label>
+                            <p style={{ fontSize: '0.85rem', color: 'var(--text-primary)', margin: 0 }}>
+                                {profile.created_at ? new Date(profile.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Message */}
+                    {message && (
+                        <div style={{
+                            marginTop: 16, padding: '10px 16px', borderRadius: 10,
+                            background: message.startsWith('✅') ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+                            color: message.startsWith('✅') ? '#10b981' : '#ef4444',
+                            fontSize: '0.85rem', fontWeight: 600,
+                        }}>
+                            {message}
+                        </div>
+                    )}
+
+                    {/* Save Button */}
+                    <button
+                        onClick={handleSave} disabled={saving}
+                        style={{
+                            marginTop: 20, width: '100%', padding: '14px',
+                            background: 'linear-gradient(135deg, #c9a84c, #e0c068)',
+                            color: '#1a1a2e', border: 'none', borderRadius: 12,
+                            fontSize: '0.95rem', fontWeight: 700, cursor: saving ? 'wait' : 'pointer',
+                            opacity: saving ? 0.7 : 1,
+                            transition: 'opacity 0.2s, transform 0.1s',
+                        }}
+                    >
+                        {saving ? 'Menyimpan...' : '💾 Simpan Perubahan'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
 }
 
 /* ========== ANALYTICS WIDGET ========== */
