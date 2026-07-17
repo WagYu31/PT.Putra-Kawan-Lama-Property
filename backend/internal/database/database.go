@@ -3,7 +3,9 @@ package database
 import (
 	"fmt"
 	"log"
+	"time"
 
+	gomysql "github.com/go-sql-driver/mysql"
 	"github.com/putra-kawan-lama/backend/internal/config"
 	"github.com/putra-kawan-lama/backend/internal/models"
 	"gorm.io/driver/mysql"
@@ -12,10 +14,21 @@ import (
 )
 
 func Connect(cfg *config.Config) (*gorm.DB, error) {
-	dsn := fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-		cfg.DBUser, cfg.DBPass, cfg.DBHost, cfg.DBPort, cfg.DBName,
-	)
+	loc, _ := time.LoadLocation("Asia/Jakarta")
+	mysqlCfg := gomysql.Config{
+		User:                 cfg.DBUser,
+		Passwd:               cfg.DBPass,
+		Net:                  "tcp",
+		Addr:                 fmt.Sprintf("%s:%s", cfg.DBHost, cfg.DBPort),
+		DBName:               cfg.DBName,
+		ParseTime:            true,
+		Loc:                  loc,
+		AllowNativePasswords: true,
+		Collation:            "utf8mb4_unicode_ci",
+	}
+	dsn := mysqlCfg.FormatDSN()
+
+	log.Printf("🔗 Connecting to MySQL at %s:%s/%s as %s", cfg.DBHost, cfg.DBPort, cfg.DBName, cfg.DBUser)
 
 	logLevel := logger.Info
 	if cfg.GinMode == "release" {
