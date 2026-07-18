@@ -1,11 +1,42 @@
 package models
 
 import (
+	"database/sql/driver"
+	"encoding/json"
+	"fmt"
 	"time"
 
-	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
+
+// StringArray is a MySQL-compatible replacement for pq.StringArray
+// It stores string slices as JSON arrays in the database
+type StringArray []string
+
+func (s StringArray) Value() (driver.Value, error) {
+	if s == nil {
+		return "[]", nil
+	}
+	b, err := json.Marshal(s)
+	return string(b), err
+}
+
+func (s *StringArray) Scan(value interface{}) error {
+	if value == nil {
+		*s = StringArray{}
+		return nil
+	}
+	var bytes []byte
+	switch v := value.(type) {
+	case string:
+		bytes = []byte(v)
+	case []byte:
+		bytes = v
+	default:
+		return fmt.Errorf("cannot scan %T into StringArray", value)
+	}
+	return json.Unmarshal(bytes, s)
+}
 
 type PropertyType string
 type PropertyCategory string
@@ -60,12 +91,12 @@ type Property struct {
 	Certificate string  `gorm:"size:50" json:"certificate"`
 
 	// Media
-	Images     pq.StringArray `gorm:"type:text[]" json:"images"`
+	Images     StringArray `gorm:"type:json" json:"images"`
 	VideoURL   string         `gorm:"size:255" json:"video_url"`
 	VirtualTour string        `gorm:"size:255" json:"virtual_tour"`
 
 	// Features
-	Facilities pq.StringArray `gorm:"type:text[]" json:"facilities"`
+	Facilities StringArray `gorm:"type:json" json:"facilities"`
 
 	// Status
 	Status   PropertyStatus `gorm:"size:20;default:available;index" json:"status"`

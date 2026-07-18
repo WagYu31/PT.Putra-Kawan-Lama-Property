@@ -4,7 +4,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/lib/pq"
 	"github.com/putra-kawan-lama/backend/internal/models"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -76,8 +75,8 @@ func Seed(db *gorm.DB) error {
 			Floors:      3,
 			YearBuilt:   2024,
 			Certificate: "SHM",
-			Images:      pq.StringArray{"/uploads/property-1a.jpg", "/uploads/property-1b.jpg", "/uploads/property-1c.jpg"},
-			Facilities:  pq.StringArray{"Kolam Renang", "Smart Home", "Taman", "CCTV", "Carport", "Rooftop"},
+			Images:      models.StringArray{"/uploads/property-1a.jpg", "/uploads/property-1b.jpg", "/uploads/property-1c.jpg"},
+			Facilities:  models.StringArray{"Kolam Renang", "Smart Home", "Taman", "CCTV", "Carport", "Rooftop"},
 			Status:      models.StatusAvailable,
 			Featured:    true,
 		},
@@ -103,8 +102,8 @@ func Seed(db *gorm.DB) error {
 			Floors:      1,
 			YearBuilt:   2023,
 			Certificate: "PPJB",
-			Images:      pq.StringArray{"/uploads/property-2a.jpg", "/uploads/property-2b.jpg"},
-			Facilities:  pq.StringArray{"Infinity Pool", "Gym", "Sky Lounge", "Concierge", "Parking"},
+			Images:      models.StringArray{"/uploads/property-2a.jpg", "/uploads/property-2b.jpg"},
+			Facilities:  models.StringArray{"Infinity Pool", "Gym", "Sky Lounge", "Concierge", "Parking"},
 			Status:      models.StatusAvailable,
 			Featured:    true,
 		},
@@ -130,8 +129,8 @@ func Seed(db *gorm.DB) error {
 			Floors:      2,
 			YearBuilt:   2023,
 			Certificate: "SHM",
-			Images:      pq.StringArray{"/uploads/property-3a.jpg", "/uploads/property-3b.jpg"},
-			Facilities:  pq.StringArray{"Private Pool", "Garden", "BBQ Area", "Mountain View", "Gazebo"},
+			Images:      models.StringArray{"/uploads/property-3a.jpg", "/uploads/property-3b.jpg"},
+			Facilities:  models.StringArray{"Private Pool", "Garden", "BBQ Area", "Mountain View", "Gazebo"},
 			Status:      models.StatusAvailable,
 			Featured:    true,
 		},
@@ -156,8 +155,8 @@ func Seed(db *gorm.DB) error {
 			Floors:      3,
 			YearBuilt:   2022,
 			Certificate: "SHM",
-			Images:      pq.StringArray{"/uploads/property-4a.jpg"},
-			Facilities:  pq.StringArray{"Parking Area", "Loading Dock", "Security 24/7"},
+			Images:      models.StringArray{"/uploads/property-4a.jpg"},
+			Facilities:  models.StringArray{"Parking Area", "Loading Dock", "Security 24/7"},
 			Status:      models.StatusAvailable,
 			Featured:    false,
 		},
@@ -177,8 +176,8 @@ func Seed(db *gorm.DB) error {
 			Lng:         106.7350,
 			LandArea:    800,
 			Certificate: "SHM",
-			Images:      pq.StringArray{"/uploads/property-5a.jpg"},
-			Facilities:  pq.StringArray{"Corner Lot", "Wide Road Access", "Gated Community"},
+			Images:      models.StringArray{"/uploads/property-5a.jpg"},
+			Facilities:  models.StringArray{"Corner Lot", "Wide Road Access", "Gated Community"},
 			Status:      models.StatusAvailable,
 			Featured:    true,
 		},
@@ -202,8 +201,8 @@ func Seed(db *gorm.DB) error {
 			Floors:      1,
 			YearBuilt:   2021,
 			Certificate: "HGB",
-			Images:      pq.StringArray{"/uploads/property-6a.jpg"},
-			Facilities:  pq.StringArray{"Container Access", "Security 24/7", "Office Space", "Loading Area"},
+			Images:      models.StringArray{"/uploads/property-6a.jpg"},
+			Facilities:  models.StringArray{"Container Access", "Security 24/7", "Office Space", "Loading Area"},
 			Status:      models.StatusAvailable,
 			Featured:    false,
 		},
