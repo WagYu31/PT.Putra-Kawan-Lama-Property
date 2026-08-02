@@ -56,10 +56,16 @@ function LoginForm() {
                             Belum punya akun? <Link href="/auth/register">Daftar Sekarang</Link>
                         </p>
                         <div className={styles.demo}>
-                            <p>Demo Accounts:</p>
-                            <code>admin@putrakawanlama.com / admin123</code>
-                            <code>owner@putrakawanlama.com / owner123</code>
-                            <code>customer@putrakawanlama.com / customer123</code>
+                            <p>Demo Accounts (Klik untuk isi otomatis):</p>
+                            <button type="button" className={styles.demoBtn} onClick={() => { setEmail('admin@putrakawanlama.com'); setPassword('admin123'); }}>
+                                <span>🔑 Admin:</span> <code>admin@putrakawanlama.com / admin123</code>
+                            </button>
+                            <button type="button" className={styles.demoBtn} onClick={() => { setEmail('owner@putrakawanlama.com'); setPassword('owner123'); }}>
+                                <span>🏢 Owner:</span> <code>owner@putrakawanlama.com / owner123</code>
+                            </button>
+                            <button type="button" className={styles.demoBtn} onClick={() => { setEmail('customer@putrakawanlama.com'); setPassword('customer123'); }}>
+                                <span>👤 Customer:</span> <code>customer@putrakawanlama.com / customer123</code>
+                            </button>
                         </div>
                     </div>
                 </div>

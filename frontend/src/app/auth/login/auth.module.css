@@ -108,13 +108,38 @@
 }
 
 .demo code {
-    display: block;
+    display: inline-block;
     font-size: 0.75rem;
     color: var(--text-secondary);
-    margin-bottom: 4px;
+    background: transparent;
+    padding: 0;
+}
+
+.demoBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    margin-bottom: 8px;
     background: var(--bg-secondary);
-    padding: 4px 8px;
-    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.demoBtn span {
+    font-size: 0.75rem;
+    color: var(--gold-primary);
+    font-weight: 600;
+}
+
+.demoBtn:hover {
+    background: rgba(201, 168, 76, 0.12);
+    border-color: rgba(201, 168, 76, 0.4);
+    transform: translateY(-1px);
 }
 
 /* Right Side: Banner */
