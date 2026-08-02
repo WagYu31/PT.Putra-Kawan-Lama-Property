@@ -239,6 +239,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
     const [surveyDate, setSurveyDate] = useState('');
     const [surveyTime, setSurveyTime] = useState('');
     const [surveyNote, setSurveyNote] = useState('');
+    const [showSurveyModal, setShowSurveyModal] = useState(false);
     const [payMethod, setPayMethod] = useState<'cash' | 'installment'>('cash');
     const [installTenor, setInstallTenor] = useState(12);
     const dpPercent = 0.10;
@@ -364,12 +365,19 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
             ? [1, 3, 6, 12, 24]
             : [1, 2, 3, 5];
 
-    // Handle survey submission
-    const handleSurvey = async () => {
+    // Open confirmation modal for survey
+    const openSurveyModal = () => {
         if (!surveyDate) { alert('Pilih tanggal survey terlebih dahulu!'); return; }
         if (!surveyTime) { alert('Pilih jam survey terlebih dahulu!'); return; }
         const token = typeof window !== 'undefined' ? localStorage.getItem('pkwl_token') : null;
         if (!token) { alert('Silakan login terlebih dahulu untuk menjadwalkan survey.'); return; }
+        setShowSurveyModal(true);
+    };
+
+    // Handle survey submission
+    const handleSurvey = async () => {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('pkwl_token') : null;
+        if (!token) return;
         setIsProcessing(true);
         try {
             await api('/api/surveys', {
@@ -384,6 +392,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
             });
             setSurveySuccess(true);
             setBuyStep(2);
+            setShowSurveyModal(false);
             // Refresh booked dates
             setBookedDates(prev => [...prev, surveyDate]);
         } catch (err: any) {
@@ -698,11 +707,117 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                                                 <label>📝 Catatan (opsional)</label>
                                                 <textarea className={styles.formTextarea} placeholder="Tulis catatan untuk jadwal survey..." rows={3} value={surveyNote} onChange={(e) => setSurveyNote(e.target.value)}></textarea>
                                             </div>
-                                            <button className={styles.btnPrimary} onClick={handleSurvey} disabled={isProcessing || (!!surveyDate && isDateBooked(surveyDate))}>
+                                            <button className={styles.btnPrimary} onClick={openSurveyModal} disabled={isProcessing || (!!surveyDate && isDateBooked(surveyDate))}>
                                                 {isProcessing ? '⏳ Memproses...' : '📋 Jadwalkan Survey'}
                                             </button>
                                         </>
                                     )}
+
+            {/* Pop-up Survey Confirmation Modal */}
+            {showSurveyModal && (
+                <div style={{
+                    position: 'fixed',
+                    inset: 0,
+                    backgroundColor: 'rgba(10, 15, 29, 0.85)',
+                    backdropFilter: 'blur(12px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 9999,
+                    padding: 20,
+                }}>
+                    <div style={{
+                        background: 'var(--bg-card)',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: 20,
+                        padding: 32,
+                        maxWidth: 480,
+                        width: '100%',
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)',
+                        animation: 'fadeIn 0.2s ease-out',
+                    }}>
+                        <div style={{ textAlign: 'center', marginBottom: 20 }}>
+                            <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>📋</div>
+                            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', color: 'var(--text-primary)', margin: 0 }}>
+                                Konfirmasi Jadwal Survey
+                            </h3>
+                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: 6 }}>
+                                Mohon periksa kembali detail survey lokasi Anda sebelum mengonfirmasi.
+                            </p>
+                        </div>
+
+                        <div style={{
+                            background: 'var(--bg-secondary)',
+                            border: '1px solid var(--border-color)',
+                            borderRadius: 14,
+                            padding: 18,
+                            marginBottom: 24,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 12,
+                        }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>🏡 Properti:</span>
+                                <strong style={{ color: 'var(--text-primary)', fontSize: '0.85rem', textAlign: 'right', flex: 1 }}>{property.title}</strong>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>📍 Lokasi:</span>
+                                <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', textAlign: 'right', flex: 1 }}>{property.city}, {property.province}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, borderTop: '1px border-box rgba(255,255,255,0.08)', paddingTop: 8 }}>
+                                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>📅 Tanggal:</span>
+                                <strong style={{ color: 'var(--gold-primary)', fontSize: '0.9rem' }}>{surveyDate}</strong>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>🕐 Jam Survey:</span>
+                                <strong style={{ color: 'var(--gold-primary)', fontSize: '0.9rem' }}>{surveyTime} WIB</strong>
+                            </div>
+                            {surveyNote && (
+                                <div style={{ borderTop: '1px border-box rgba(255,255,255,0.08)', paddingTop: 8 }}>
+                                    <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', display: 'block', marginBottom: 4 }}>📝 Catatan:</span>
+                                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: 0, fontStyle: 'italic' }}>"{surveyNote}"</p>
+                                </div>
+                            )}
+                        </div>
+
+                        <div style={{ display: 'flex', gap: 12 }}>
+                            <button
+                                type="button"
+                                onClick={() => setShowSurveyModal(false)}
+                                style={{
+                                    flex: 1,
+                                    padding: '12px 16px',
+                                    borderRadius: 10,
+                                    border: '1px solid var(--border-color)',
+                                    background: 'transparent',
+                                    color: 'var(--text-secondary)',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                ✖️ Batal
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleSurvey}
+                                disabled={isProcessing}
+                                style={{
+                                    flex: 1.5,
+                                    padding: '12px 16px',
+                                    borderRadius: 10,
+                                    border: 'none',
+                                    background: 'var(--gold-gradient)',
+                                    color: '#0a0f1d',
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                {isProcessing ? '⏳ Memproses...' : '✅ Konfirmasi'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
                                     {/* Step 2: Booking + Payment Method */}
                                     {buyStep === 2 && (
