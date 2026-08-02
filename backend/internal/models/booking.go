@@ -36,6 +36,7 @@ type Booking struct {
 
 	// Survey fields
 	SurveyDate *time.Time `json:"survey_date"`
+	SurveyTime string     `gorm:"size:10" json:"survey_time"`
 
 	// Purchase fields (Cash / Installment)
 	PaymentMethod    string  `gorm:"size:20" json:"payment_method"` // cash, installment

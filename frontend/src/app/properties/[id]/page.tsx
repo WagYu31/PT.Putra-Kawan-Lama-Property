@@ -237,6 +237,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
     // Sidebar state
     const [buyStep, setBuyStep] = useState(1); // 1=survey, 2=booking, 3=bayar
     const [surveyDate, setSurveyDate] = useState('');
+    const [surveyTime, setSurveyTime] = useState('');
     const [surveyNote, setSurveyNote] = useState('');
     const [payMethod, setPayMethod] = useState<'cash' | 'installment'>('cash');
     const [installTenor, setInstallTenor] = useState(12);
@@ -366,6 +367,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
     // Handle survey submission
     const handleSurvey = async () => {
         if (!surveyDate) { alert('Pilih tanggal survey terlebih dahulu!'); return; }
+        if (!surveyTime) { alert('Pilih jam survey terlebih dahulu!'); return; }
         const token = typeof window !== 'undefined' ? localStorage.getItem('pkwl_token') : null;
         if (!token) { alert('Silakan login terlebih dahulu untuk menjadwalkan survey.'); return; }
         setIsProcessing(true);
@@ -376,6 +378,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                 body: {
                     property_id: Number(property.id),
                     survey_date: surveyDate,
+                    survey_time: surveyTime,
                     message: surveyNote,
                 },
             });
@@ -683,6 +686,15 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                                                 )}
                                             </div>
                                             <div className={styles.formGroup}>
+                                                <label>🕐 Jam Survey</label>
+                                                <input
+                                                    type="time"
+                                                    className={styles.formInput}
+                                                    value={surveyTime}
+                                                    onChange={(e) => setSurveyTime(e.target.value)}
+                                                />
+                                            </div>
+                                            <div className={styles.formGroup}>
                                                 <label>📝 Catatan (opsional)</label>
                                                 <textarea className={styles.formTextarea} placeholder="Tulis catatan untuk jadwal survey..." rows={3} value={surveyNote} onChange={(e) => setSurveyNote(e.target.value)}></textarea>
                                             </div>
@@ -786,7 +798,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                                             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
                                                 Terima kasih! Tim kami akan menghubungi Anda untuk konfirmasi pembayaran.
                                             </p>
-                                            <button className={styles.btnPrimary} style={{ marginTop: 16 }} onClick={() => { setBuyStep(1); setSurveySuccess(false); setSurveyDate(''); setSurveyNote(''); }}>
+                                            <button className={styles.btnPrimary} style={{ marginTop: 16 }} onClick={() => { setBuyStep(1); setSurveySuccess(false); setSurveyDate(''); setSurveyTime(''); setSurveyNote(''); }}>
                                                 🔄 Mulai Ulang
                                             </button>
                                         </div>

@@ -24,6 +24,7 @@ func (h *BookingHandler) CreateSurvey(c *gin.Context) {
 	var input struct {
 		PropertyID uint   `json:"property_id" binding:"required"`
 		SurveyDate string `json:"survey_date" binding:"required"`
+		SurveyTime string `json:"survey_time"`
 		Message    string `json:"message"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -67,6 +68,7 @@ func (h *BookingHandler) CreateSurvey(c *gin.Context) {
 		BookingType: models.BookingTypeSurvey,
 		Status:      models.BookingPending,
 		SurveyDate:  &surveyDate,
+		SurveyTime:  input.SurveyTime,
 		Message:     input.Message,
 		TotalPrice:  property.Price,
 	}
