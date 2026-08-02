@@ -18,7 +18,7 @@ export default function PageTracker() {
     useEffect(() => {
         const sid = getSessionId();
         if (!sid) return;
-        const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
+        const API = process.env.NEXT_PUBLIC_API_URL || '';
         fetch(`${API}/api/analytics/track`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

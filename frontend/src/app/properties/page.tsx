@@ -6,7 +6,7 @@ import { LiveChatProvider } from '@/lib/livechat';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import ChatBot from '@/components/layout/ChatBot';
-import { api, formatPrice, propertyCategories, cities } from '@/lib/api';
+import { api, formatPrice, propertyCategories, cities, API_URL } from '@/lib/api';
 import styles from './properties.module.css';
 
 /* fallback images per category */
@@ -52,7 +52,7 @@ export default function PropertiesPage() {
         // Load favorite IDs
         const token = localStorage.getItem('pkwl_token');
         if (token) {
-            fetch('http://localhost:8081/api/favorites/ids', {
+            fetch(`${API_URL}/api/favorites/ids`, {
                 headers: { Authorization: `Bearer ${token}` },
             }).then(r => r.json()).then(d => setFavIds(d.favorited_ids || [])).catch(() => { });
         }
@@ -63,7 +63,7 @@ export default function PropertiesPage() {
         e.stopPropagation();
         const token = localStorage.getItem('pkwl_token');
         if (!token) { alert('Silakan login terlebih dahulu untuk menambah favorit'); return; }
-        await fetch(`http://localhost:8081/api/favorites/${propId}/toggle`, {
+        await fetch(`${API_URL}/api/favorites/${propId}/toggle`, {
             method: 'POST', headers: { Authorization: `Bearer ${token}` },
         });
         setFavIds(prev => prev.includes(propId) ? prev.filter(id => id !== propId) : [...prev, propId]);

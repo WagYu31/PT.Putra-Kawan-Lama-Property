@@ -4,7 +4,7 @@ import { LiveChatProvider } from '@/lib/livechat';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import ChatBot from '@/components/layout/ChatBot';
-import { api, formatPrice } from '@/lib/api';
+import { api, formatPrice, API_URL } from '@/lib/api';
 import styles from './detail.module.css';
 import { use, useState, useEffect } from 'react';
 
@@ -259,7 +259,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
     useEffect(() => {
         const token = localStorage.getItem('pkwl_token');
         if (!token) return;
-        fetch(`http://localhost:8081/api/favorites/${id}/check`, {
+        fetch(`${API_URL}/api/favorites/${id}/check`, {
             headers: { Authorization: `Bearer ${token}` },
         }).then(r => r.json()).then(d => setIsFavorited(d.is_favorited)).catch(() => { });
     }, [id]);
@@ -506,7 +506,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                                 <button onClick={async () => {
                                     const token = localStorage.getItem('pkwl_token');
                                     if (!token) { alert('Silakan login terlebih dahulu'); return; }
-                                    await fetch(`http://localhost:8081/api/favorites/${id}/toggle`, {
+                                    await fetch(`${API_URL}/api/favorites/${id}/toggle`, {
                                         method: 'POST', headers: { Authorization: `Bearer ${token}` },
                                     });
                                     setIsFavorited(!isFavorited);

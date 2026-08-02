@@ -33,7 +33,7 @@ function DashboardContent() {
 
     useEffect(() => {
         if (!user) return;
-        const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
+        const API = process.env.NEXT_PUBLIC_API_URL || '${process.env.NEXT_PUBLIC_API_URL || ""}';
         const token = localStorage.getItem('pkwl_token');
         const headers: Record<string, string> = { 'Authorization': `Bearer ${token}` };
         const fetchStats = async () => {
@@ -382,7 +382,7 @@ function PropertyManager() {
 
     const fetchProps = async () => {
         try {
-            const res = await fetch('http://localhost:8081/api/properties', {
+            const res = await fetch('${process.env.NEXT_PUBLIC_API_URL || ""}/api/properties', {
                 headers: token ? { Authorization: `Bearer ${token}` } : {},
             });
             const data = await res.json();
@@ -414,8 +414,8 @@ function PropertyManager() {
         setSaving(true);
         try {
             const url = editId
-                ? `http://localhost:8081/api/properties/${editId}`
-                : 'http://localhost:8081/api/properties';
+                ? `${process.env.NEXT_PUBLIC_API_URL || ""}/api/properties/${editId}`
+                : '${process.env.NEXT_PUBLIC_API_URL || ""}/api/properties';
             const res = await fetch(url, {
                 method: editId ? 'PUT' : 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -432,7 +432,7 @@ function PropertyManager() {
     const handleDelete = async (id: number) => {
         if (!confirm('Yakin ingin menghapus properti ini?')) return;
         try {
-            await fetch(`http://localhost:8081/api/properties/${id}`, {
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/properties/${id}`, {
                 method: 'DELETE', headers: { Authorization: `Bearer ${token}` },
             });
             fetchProps();
@@ -441,7 +441,7 @@ function PropertyManager() {
 
     const handleStatusChange = async (id: number, newStatus: string) => {
         try {
-            const res = await fetch(`http://localhost:8081/api/properties/${id}/status`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/properties/${id}/status`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                 body: JSON.stringify({ status: newStatus }),
@@ -833,8 +833,8 @@ function BookingManager() {
             const token = localStorage.getItem('pkwl_token');
             if (!token) return;
             const url = filter === 'all'
-                ? 'http://localhost:8081/api/bookings'
-                : `http://localhost:8081/api/bookings?status=${filter}`;
+                ? '${process.env.NEXT_PUBLIC_API_URL || ""}/api/bookings'
+                : `${process.env.NEXT_PUBLIC_API_URL || ""}/api/bookings?status=${filter}`;
             const res = await fetch(url, {
                 headers: { Authorization: `Bearer ${token}` },
             });
@@ -851,7 +851,7 @@ function BookingManager() {
         if (!confirm(`Ubah status booking menjadi "${status}"?`)) return;
         const token = localStorage.getItem('pkwl_token');
         try {
-            await fetch(`http://localhost:8081/api/bookings/${id}/status`, {
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/bookings/${id}/status`, {
                 method: 'PATCH',
                 headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status }),
@@ -877,7 +877,7 @@ function BookingManager() {
         setIsPaying(true);
         try {
             // Step 1: Create purchase booking
-            const purchaseRes = await fetch('http://localhost:8081/api/bookings/purchase', {
+            const purchaseRes = await fetch('${process.env.NEXT_PUBLIC_API_URL || ""}/api/bookings/purchase', {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -891,7 +891,7 @@ function BookingManager() {
             const bookingId = purchaseData.booking?.id || purchaseData.id;
 
             // Step 2: Get Snap token
-            const snapRes = await fetch('http://localhost:8081/api/payments/snap', {
+            const snapRes = await fetch('${process.env.NEXT_PUBLIC_API_URL || ""}/api/payments/snap', {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ booking_id: bookingId }),
@@ -903,7 +903,7 @@ function BookingManager() {
             (window as any).snap.pay(snapData.snap_token, {
                 onSuccess: async () => {
                     try {
-                        await fetch(`http://localhost:8081/api/payments/${snapData.payment_id}/sync`, {
+                        await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/payments/${snapData.payment_id}/sync`, {
                             method: 'POST', headers: { Authorization: `Bearer ${token}` },
                         });
                     } catch (e) { console.error('Sync error:', e); }
@@ -1251,7 +1251,7 @@ function DealModal({ booking, token, onClose }: { booking: any; token: string; o
         try {
             let res;
             if (dealType === 'purchase') {
-                res = await fetch('http://localhost:8081/api/bookings/purchase', {
+                res = await fetch('${process.env.NEXT_PUBLIC_API_URL || ""}/api/bookings/purchase', {
                     method: 'POST',
                     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1263,7 +1263,7 @@ function DealModal({ booking, token, onClose }: { booking: any; token: string; o
                 });
             } else {
                 if (!startDate) { alert('Pilih tanggal mulai sewa'); setSubmitting(false); return; }
-                res = await fetch('http://localhost:8081/api/bookings/rental', {
+                res = await fetch('${process.env.NEXT_PUBLIC_API_URL || ""}/api/bookings/rental', {
                     method: 'POST',
                     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1402,7 +1402,7 @@ function DocumentUploadModal({ booking, token, onClose }: { booking: any; token:
     }, []);
 
     const fetchDocs = async () => {
-        const res = await fetch(`http://localhost:8081/api/documents/booking/${booking.id}`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/documents/booking/${booking.id}`, {
             headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
@@ -1417,7 +1417,7 @@ function DocumentUploadModal({ booking, token, onClose }: { booking: any; token:
         const formData = new FormData();
         formData.append('file', file);
         formData.append('type', docType);
-        const res = await fetch(`http://localhost:8081/api/documents/upload/${booking.id}`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/documents/upload/${booking.id}`, {
             method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData,
         });
         if (res.ok) { await fetchDocs(); }
@@ -1504,7 +1504,7 @@ function DocumentReviewModal({ booking, token, onClose }: { booking: any; token:
     useEffect(() => { fetchDocs(); }, []);
 
     const fetchDocs = async () => {
-        const res = await fetch(`http://localhost:8081/api/documents/booking/${booking.id}`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/documents/booking/${booking.id}`, {
             headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
@@ -1515,7 +1515,7 @@ function DocumentReviewModal({ booking, token, onClose }: { booking: any; token:
     };
 
     const verifyDoc = async (docId: number, action: 'approve' | 'reject', reason = '') => {
-        const res = await fetch(`http://localhost:8081/api/documents/${docId}/verify`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/documents/${docId}/verify`, {
             method: 'PATCH',
             headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({ action, reason }),
@@ -1553,7 +1553,7 @@ function DocumentReviewModal({ booking, token, onClose }: { booking: any; token:
                             }}>{doc.status === 'approved' ? '✅ Disetujui' : doc.status === 'rejected' ? '❌ Ditolak' : '⏳ Pending'}</span>
                         </div>
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 8 }}>📎 {doc.original_name}</p>
-                        <a href={`http://localhost:8081${doc.file_path}`} target="_blank" rel="noopener noreferrer"
+                        <a href={`${process.env.NEXT_PUBLIC_API_URL || ""}${doc.file_path}`} target="_blank" rel="noopener noreferrer"
                             style={{ color: '#3b82f6', fontSize: '0.8rem', textDecoration: 'underline' }}>
                             👁 Lihat Dokumen
                         </a>
@@ -1627,7 +1627,7 @@ function CicilanManager() {
         if (!token) return;
         (async () => {
             try {
-                const res = await fetch('http://localhost:8081/api/bookings', {
+                const res = await fetch('${process.env.NEXT_PUBLIC_API_URL || ""}/api/bookings', {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 const data = await res.json();
@@ -1636,7 +1636,7 @@ function CicilanManager() {
                 );
                 setBookings(installBk);
                 for (const bk of installBk) {
-                    const sRes = await fetch(`http://localhost:8081/api/bookings/${bk.id}/installments`, {
+                    const sRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/bookings/${bk.id}/installments`, {
                         headers: { Authorization: `Bearer ${token}` },
                     });
                     if (sRes.ok) {
@@ -1660,7 +1660,7 @@ function CicilanManager() {
                 document.head.appendChild(s);
                 await new Promise(r => setTimeout(r, 2000));
             }
-            const res = await fetch('http://localhost:8081/api/payments/installment/pay', {
+            const res = await fetch('${process.env.NEXT_PUBLIC_API_URL || ""}/api/payments/installment/pay', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                 body: JSON.stringify({ payment_id: paymentId }),
@@ -1670,7 +1670,7 @@ function CicilanManager() {
             (window as any).snap.pay(data.snap_token, {
                 onSuccess: async () => {
                     try {
-                        await fetch(`http://localhost:8081/api/payments/${data.payment_id}/sync`, {
+                        await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/payments/${data.payment_id}/sync`, {
                             method: 'POST', headers: { Authorization: `Bearer ${token}` },
                         });
                     } catch (e) { console.error('Sync error:', e); }
@@ -1800,7 +1800,7 @@ function CicilanManager() {
                                                                 <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{fmtD(p.paid_at)}</span>
                                                             )}
                                                             {isPaid && (
-                                                                <a href={`http://localhost:8081/api/payments/${p.id}/invoice`}
+                                                                <a href={`${process.env.NEXT_PUBLIC_API_URL || ""}/api/payments/${p.id}/invoice`}
                                                                     target="_blank" rel="noopener noreferrer"
                                                                     style={{ display: 'inline-block', marginLeft: 8, padding: '3px 10px', background: 'rgba(201,168,76,0.15)', color: '#c9a84c', borderRadius: 6, fontSize: '0.75rem', textDecoration: 'none', fontWeight: 600 }}>
                                                                     📄 Invoice
@@ -1832,7 +1832,7 @@ function FavoritesTab() {
         if (!token) return;
         (async () => {
             try {
-                const res = await fetch('http://localhost:8081/api/favorites', {
+                const res = await fetch('${process.env.NEXT_PUBLIC_API_URL || ""}/api/favorites', {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 if (res.ok) {
@@ -1846,7 +1846,7 @@ function FavoritesTab() {
 
     const removeFavorite = async (propertyId: number) => {
         if (!token) return;
-        await fetch(`http://localhost:8081/api/favorites/${propertyId}/toggle`, {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/favorites/${propertyId}/toggle`, {
             method: 'POST', headers: { Authorization: `Bearer ${token}` },
         });
         setFavorites(prev => prev.filter(f => f.property_id !== propertyId));
@@ -1887,7 +1887,7 @@ function FavoritesTab() {
                     const getImg = () => {
                         if (p.images && p.images.length > 0) {
                             const first = p.images[0];
-                            if (first.startsWith('/uploads/')) return `http://localhost:8081${first}`;
+                            if (first.startsWith('/uploads/')) return `${process.env.NEXT_PUBLIC_API_URL || ""}${first}`;
                             return first;
                         }
                         return fallbackImages[p.category] || fallbackImages.house;
@@ -1946,7 +1946,7 @@ function NotificationBell() {
 
     useEffect(() => {
         if (!token) return;
-        const API = 'http://localhost:8081';
+        const API = '${process.env.NEXT_PUBLIC_API_URL || ""}';
         const headers = { Authorization: `Bearer ${token}` };
         const fetchNotifs = async () => {
             try {
@@ -1965,7 +1965,7 @@ function NotificationBell() {
 
     const markAllRead = async () => {
         if (!token) return;
-        await fetch('http://localhost:8081/api/notifications/read-all', {
+        await fetch('${process.env.NEXT_PUBLIC_API_URL || ""}/api/notifications/read-all', {
             method: 'PATCH', headers: { Authorization: `Bearer ${token}` },
         });
         setUnreadCount(0);
@@ -2051,7 +2051,7 @@ function ProfileManager() {
     const [changingPw, setChangingPw] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
+    const API = process.env.NEXT_PUBLIC_API_URL || '${process.env.NEXT_PUBLIC_API_URL || ""}';
 
     useEffect(() => {
         const token = localStorage.getItem('pkwl_token');
@@ -2388,7 +2388,7 @@ function AnalyticsWidget() {
 
     useEffect(() => {
         const token = localStorage.getItem('pkwl_token');
-        const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
+        const API = process.env.NEXT_PUBLIC_API_URL || '${process.env.NEXT_PUBLIC_API_URL || ""}';
         const fetchStats = () => {
             fetch(`${API}/api/analytics/stats`, {
                 headers: { Authorization: `Bearer ${token}` },
