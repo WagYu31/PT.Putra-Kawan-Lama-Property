@@ -32,9 +32,6 @@ function DashboardContent() {
         }
     }, [user, isLoading]);
 
-    if (isLoading) return <div className={styles.loading}>Memuat data...</div>;
-    if (!user) return <div className={styles.loading}>Mengarahkan ke halaman login...</div>;
-
     useEffect(() => {
         if (!user) return;
         const API = API_URL;
@@ -71,7 +68,8 @@ function DashboardContent() {
         fetchStats();
     }, [user]);
 
-    if (isLoading || !user) return <div className={styles.loading}>Loading...</div>;
+    if (isLoading) return <div className={styles.loading}>Memuat data...</div>;
+    if (!user) return <div className={styles.loading}>Mengarahkan ke halaman login...</div>;
 
     const menuItems = user.role === 'admin'
         ? [
