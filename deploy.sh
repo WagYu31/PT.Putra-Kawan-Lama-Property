@@ -1,7 +1,7 @@
 #!/bin/bash
-echo "🚀 Starting Deployment with Full Browser Diagnostics..."
+echo "🚀 Starting Deployment with CloudLinux & EasyApache Node Auto-Discovery..."
 
-# 1. Kill old processes
+# 1. Kill old hanging processes
 pkill -9 -u $(whoami) -f "node|pkwl|main" 2>/dev/null || true
 sleep 3
 
@@ -15,7 +15,27 @@ export GODEBUG=asyncpreempt=0
 PORT=9095 nohup ./pkwl-backend-linux > ~/trgmix.online/backend.log 2>&1 &
 sleep 2
 
-# 3. Extract & Launch Next.js Standalone Frontend on Port 3080
+# 3. Detect Node.js Binary across CloudLinux (alt-nodejs) and EasyApache (ea-nodejs)
+NODE_BIN="node"
+for path in \
+    /opt/alt/alt-nodejs20/root/usr/bin/node \
+    /opt/alt/alt-nodejs18/root/usr/bin/node \
+    /opt/alt/alt-nodejs16/root/usr/bin/node \
+    /opt/cpanel/ea-nodejs20/bin/node \
+    /opt/cpanel/ea-nodejs18/bin/node \
+    /usr/local/bin/node \
+    /usr/bin/node
+do
+    if [ -x "$path" ]; then
+        NODE_BIN="$path"
+        break
+    fi
+done
+
+echo "Found Node Binary: $NODE_BIN ($($NODE_BIN -v 2>&1))"
+echo "Initializing Node Frontend Server with $NODE_BIN ($($NODE_BIN -v 2>&1))..." > ~/trgmix.online/node_frontend.log
+
+# 4. Extract & Launch Next.js Standalone Frontend on Port 3080
 cd ~/trgmix.online/frontend
 rm -rf .next/standalone .next/static
 mkdir -p .next
@@ -27,22 +47,11 @@ cp -r public .next/standalone/ 2>/dev/null || true
 mkdir -p ~/trgmix.online/_next
 cp -r .next/static/* ~/trgmix.online/_next/ 2>/dev/null || true
 
-NODE_BIN="node"
-if [ -f "/opt/cpanel/ea-nodejs20/bin/node" ]; then
-    NODE_BIN="/opt/cpanel/ea-nodejs20/bin/node"
-elif [ -f "/opt/cpanel/ea-nodejs18/bin/node" ]; then
-    NODE_BIN="/opt/cpanel/ea-nodejs18/bin/node"
-elif [ -f "/usr/local/bin/node" ]; then
-    NODE_BIN="/usr/local/bin/node"
-fi
-
-echo "Using Node Binary: $NODE_BIN ($($NODE_BIN -v 2>&1))"
-
 cd ~/trgmix.online/frontend/.next/standalone
-HOSTNAME=0.0.0.0 PORT=3080 NEXT_PUBLIC_API_URL=https://trgmix.online nohup $NODE_BIN server.js > ~/trgmix.online/node_frontend.log 2>&1 &
+HOSTNAME=0.0.0.0 PORT=3080 NEXT_PUBLIC_API_URL=https://trgmix.online nohup $NODE_BIN server.js >> ~/trgmix.online/node_frontend.log 2>&1 &
 sleep 3
 
-# 4. Overwrite index.php with self-healing reverse proxy & full error output
+# 5. Overwrite index.php with self-healing reverse proxy
 cat << 'EOF' > ~/trgmix.online/index.php
 <?php
 $uri = $_SERVER['REQUEST_URI'];
@@ -74,8 +83,8 @@ if ($res === false) {
     $log = @file_get_contents('/home/pitiagic/trgmix.online/node_frontend.log');
     $blog = @file_get_contents('/home/pitiagic/trgmix.online/backend.log');
     echo "<div style='font-family:sans-serif;padding:30px;max-width:800px;margin:auto;'>";
-    echo "<h2 style='color:#e11d48;'>🔍 Diagnosa Koneksi Server (Port 3080 / 9095)</h2>";
-    echo "<p>Error cURL: <code>$err</code></p>";
+    echo "<h2 style='color:#e11d48;'>🔍 Diagnosa Server (Port 3080 / 9095)</h2>";
+    echo "<p>cURL Error: <code>$err</code></p>";
     echo "<h3>Frontend Node Log (/home/pitiagic/trgmix.online/node_frontend.log):</h3>";
     echo "<pre style='background:#0f172a;color:#f8fafc;padding:16px;border-radius:8px;overflow-x:auto;'>";
     echo htmlspecialchars(substr($log ?: "File log frontend belum ada / kosong", -1500));
