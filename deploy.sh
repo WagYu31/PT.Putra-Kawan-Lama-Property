@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "🚀 Starting Deployment with Real Production Database & Midtrans Gateway..."
+echo "🚀 Starting Deployment with Self-Healing Go Backend Gateway..."
 
 # 1. Pull latest code
 cd ~/trgmix.online && git pull origin main
@@ -8,10 +8,11 @@ cd ~/trgmix.online && git pull origin main
 pkill -9 -u $(whoami) -f "node|go|pkwl|main" 2>/dev/null || true
 sleep 2
 
-# 3. Restore Real Production Database & Midtrans Configuration (.env)
-echo "REJfSE9TVD1hcnphbm8tZGIuaWQucmFwaWRwbGV4LmNvbQpEQl9QT1JUPTMzMDYKREJfVVNFUj1waXRpYWdpY19wa3dsCkRCX1BBU1NXT1JEPVdhZ3l1MzEwNTIwMDIuCkRCX05BTUU9cGl0aWFnaWNfcGt3bApKV1RfU0VDUkVUPXBrd2wtand0LXN1cGVyLXNlY3JldC1rZXktMjAyNApHSU5fTU9ERT1yZWxlYXNlCk1JRFRSQU5TX1NFUlZFUl9LRVk9TWlkLXNlcnZlci1LQWJyaG8yM3dvdklWQ2hwLWhHalV2SWIKTUlEVFJBTlNfQ0xJRU5UX0tFWT1NaWQtY2xpZW50LW1HQTd2MDRjWHJ1eDNLTkYKTUlEVFJBTlNfSVNfUFJPRFVDVElPTj10cnVl" | base64 -d > ~/trgmix.online/.env
-
-cp ~/trgmix.online/.env ~/trgmix.online/backend/.env 2>/dev/null || true
+# 3. Ensure .env exists and MIDTRANS_IS_PRODUCTION is set to true
+if [ -f ~/trgmix.online/.env ]; then
+    sed -i 's/MIDTRANS_IS_PRODUCTION=false/MIDTRANS_IS_PRODUCTION=true/g' ~/trgmix.online/.env 2>/dev/null || true
+    cp ~/trgmix.online/.env ~/trgmix.online/backend/.env 2>/dev/null || true
+fi
 
 # 4. Extract Static HTML/CSS/JS export directly into ~/trgmix.online/
 cd ~/trgmix.online
@@ -29,16 +30,14 @@ echo "Starting Go Backend on Port 9095..." > ~/trgmix.online/backend.log
 PORT=9095 nohup ./pkwl-backend-linux >> ~/trgmix.online/backend.log 2>&1 &
 sleep 2
 
-# 6. Overwrite index.php with API Reverse Proxy & Static Asset Gateway
+# 6. Overwrite index.php with Self-Healing Proxy Gateway
 cat << 'EOF' > ~/trgmix.online/index.php
 <?php
 // PT. Putra Kawan Lama - High Performance Gateway
 $uri = $_SERVER['REQUEST_URI'];
 $path = parse_url($uri, PHP_URL_PATH);
 
-// A. Proxy API and Uploads to Go Backend on Port 9095
-if (strpos($path, '/api/') === 0 || strpos($path, '/uploads/') === 0) {
-    $target = 'http://127.0.0.1:9095' . $uri;
+function proxy_backend($target, $headers) {
     $ch = curl_init();
     curl_setopt_array($ch, [
         CURLOPT_URL => $target,
@@ -48,22 +47,37 @@ if (strpos($path, '/api/') === 0 || strpos($path, '/uploads/') === 0) {
         CURLOPT_TIMEOUT => 15,
         CURLOPT_CUSTOMREQUEST => $_SERVER['REQUEST_METHOD']
     ]);
-    $headers = [];
-    foreach (getallheaders() as $k => $v) {
-        if (strtolower($k) !== 'host') $headers[] = "$k: $v";
-    }
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     if (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'PATCH'])) {
         curl_setopt($ch, CURLOPT_POSTFIELDS, file_get_contents('php://input'));
     }
     $res = curl_exec($ch);
+    $err = curl_error($ch);
+    curl_close($ch);
+    return [$res, $err];
+}
+
+$headers = [];
+foreach (getallheaders() as $k => $v) {
+    if (strtolower($k) !== 'host') $headers[] = "$k: $v";
+}
+
+// A. Proxy API and Uploads to Go Backend on Port 9095 (With Auto-Revive)
+if (strpos($path, '/api/') === 0 || strpos($path, '/uploads/') === 0) {
+    $target = 'http://127.0.0.1:9095' . $uri;
+    list($res, $err) = proxy_backend($target, $headers);
+    if ($res === false) {
+        @shell_exec('cd /home/pitiagic/trgmix.online/backend && export GOMAXPROCS=1 && PORT=9095 nohup ./pkwl-backend-linux >> /home/pitiagic/trgmix.online/backend.log 2>&1 &');
+        sleep(2);
+        list($res, $err) = proxy_backend($target, $headers);
+    }
     if ($res !== false) {
-        $hsize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        http_response_code(curl_getinfo($ch, CURLINFO_HTTP_CODE));
-        foreach (explode("\r\n", substr($res, 0, $hsize)) as $h) {
+        $parts = explode("\r\n\r\n", $res, 2);
+        $hlines = explode("\r\n", $parts[0]);
+        foreach ($hlines as $h) {
             if (!empty($h) && !preg_match('/^(Transfer-Encoding|Content-Length):/i', $h)) header($h);
         }
-        echo substr($res, $hsize);
+        echo isset($parts[1]) ? $parts[1] : '';
         exit;
     } else {
         http_response_code(502);

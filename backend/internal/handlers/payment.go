@@ -522,6 +522,9 @@ func (h *PaymentHandler) SyncPaymentStatus(c *gin.Context) {
 
 	// Check status from Midtrans API
 	url := fmt.Sprintf("https://api.sandbox.midtrans.com/v2/%s/status", payment.OrderID)
+	if h.Cfg.MidtransIsProduction {
+		url = fmt.Sprintf("https://api.midtrans.com/v2/%s/status", payment.OrderID)
+	}
 	req, _ := http.NewRequest("GET", url, nil)
 	authStr := base64.StdEncoding.EncodeToString([]byte(h.Cfg.MidtransServerKey + ":"))
 	req.Header.Set("Authorization", "Basic "+authStr)
