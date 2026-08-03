@@ -22,6 +22,9 @@ func (h *DocumentHandler) Upload(c *gin.Context) {
 	userID, _ := c.Get("userID")
 	bookingID := c.Param("booking_id")
 	docType := c.PostForm("type")
+	if docType == "" {
+		docType = c.Query("type")
+	}
 
 	if docType == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Document type is required"})

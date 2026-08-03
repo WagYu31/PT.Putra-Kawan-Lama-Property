@@ -1439,13 +1439,17 @@ function DocumentUploadModal({ booking, token, onClose }: { booking: any; token:
     const uploadFile = async (docType: string, file: File) => {
         setUploading(docType);
         const formData = new FormData();
-        formData.append('file', file);
         formData.append('type', docType);
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/documents/upload/${booking.id}`, {
+        formData.append('file', file);
+        const res = await fetch(`${API_URL}/api/documents/upload/${booking.id}?type=${docType}`, {
             method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData,
         });
-        if (res.ok) { await fetchDocs(); }
-        else { const d = await res.json(); alert(d.error || 'Upload gagal'); }
+        if (res.ok) {
+            await fetchDocs();
+        } else {
+            const d = await res.json();
+            alert(d.error || 'Upload gagal');
+        }
         setUploading(null);
     };
 
