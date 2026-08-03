@@ -1,19 +1,30 @@
 #!/bin/bash
-echo "🚀 Starting Deployment with CloudLinux V8 Memory Tuning..."
+echo "🚀 Starting Deployment with System Node Priority Scanner..."
 
 # 1. Kill all hanging processes and wait 3s to reclaim OS process slots completely
 pkill -9 -u $(whoami) -f "node|pkwl|main" 2>/dev/null || true
 sleep 3
 
-# 2. Detect Node.js Binary (Prefer Node 18 for CloudLinux cPanel stability, fallback Node 20)
+# 2. Start Go Backend on Port 9095 (Single-thread mode for cPanel safety)
+cd ~/trgmix.online/backend
+tar xzf deploy/backend_linux.tar.gz 2>/dev/null || true
+chmod +x pkwl-backend-linux
+
+export GOMAXPROCS=1
+export GODEBUG=asyncpreempt=0
+echo "Starting Go Backend on Port 9095..." > ~/trgmix.online/backend.log
+PORT=9095 nohup ./pkwl-backend-linux >> ~/trgmix.online/backend.log 2>&1 &
+sleep 2
+
+# 3. Detect Node.js Binary (Prefer system /usr/bin/node to bypass CloudLinux LVE alt-nodejs wrapper limits)
 NODE_BIN="node"
 for path in \
-    /opt/alt/alt-nodejs18/root/usr/bin/node \
-    /opt/cpanel/ea-nodejs18/bin/node \
-    /opt/alt/alt-nodejs20/root/usr/bin/node \
-    /opt/cpanel/ea-nodejs20/bin/node \
+    /usr/bin/node \
     /usr/local/bin/node \
-    /usr/bin/node
+    /opt/cpanel/ea-nodejs18/bin/node \
+    /opt/cpanel/ea-nodejs20/bin/node \
+    /opt/alt/alt-nodejs18/root/usr/bin/node \
+    /opt/alt/alt-nodejs20/root/usr/bin/node
 do
     if [ -x "$path" ]; then
         NODE_BIN="$path"
@@ -23,7 +34,7 @@ done
 
 echo "Found Node Binary: $NODE_BIN ($($NODE_BIN -v 2>&1))"
 
-# 3. Extract & Launch Next.js Standalone Frontend FIRST (with V8 max-old-space-size=256 to prevent CloudLinux SIGABRT core dump)
+# 4. Extract & Launch Next.js Standalone Frontend
 cd ~/trgmix.online/frontend
 rm -rf .next/standalone .next/static
 mkdir -p .next
@@ -36,20 +47,9 @@ mkdir -p ~/trgmix.online/_next
 cp -r .next/static/* ~/trgmix.online/_next/ 2>/dev/null || true
 
 cd ~/trgmix.online/frontend/.next/standalone
-echo "Starting Node Frontend on Port 3080 with Node $NODE_BIN..." > ~/trgmix.online/node_frontend.log
-HOSTNAME=0.0.0.0 PORT=3080 NEXT_PUBLIC_API_URL=https://trgmix.online nohup $NODE_BIN --max-old-space-size=256 --max-semi-space-size=2 server.js >> ~/trgmix.online/node_frontend.log 2>&1 &
-sleep 3
-
-# 4. Launch Go Backend SECOND (Port 9095, GOMAXPROCS=1 for cPanel safety)
-cd ~/trgmix.online/backend
-tar xzf deploy/backend_linux.tar.gz 2>/dev/null || true
-chmod +x pkwl-backend-linux
-
-export GOMAXPROCS=1
-export GODEBUG=asyncpreempt=0
-echo "Starting Go Backend on Port 9095..." > ~/trgmix.online/backend.log
-PORT=9095 nohup ./pkwl-backend-linux >> ~/trgmix.online/backend.log 2>&1 &
-sleep 2
+echo "Starting Node Frontend on Port 3080 with $NODE_BIN..." > ~/trgmix.online/node_frontend.log
+HOSTNAME=0.0.0.0 PORT=3080 NEXT_PUBLIC_API_URL=https://trgmix.online nohup $NODE_BIN server.js >> ~/trgmix.online/node_frontend.log 2>&1 &
+sleep 4
 
 # 5. Overwrite index.php with self-healing reverse proxy
 cat << 'EOF' > ~/trgmix.online/index.php
