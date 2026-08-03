@@ -1,17 +1,18 @@
 #!/bin/bash
-echo "🚀 Starting Deployment with Full Diagnostics..."
+echo "🚀 Starting Single-Thread Optimized Deployment..."
 
 # 1. Pull latest code
 cd ~/trgmix.online && git pull origin main
 
-# 2. Kill old processes
+# 2. Kill old hanging processes to free CPU/thread slots
 pkill -9 -f "node" 2>/dev/null || true
 pkill -9 -f "pkwl" 2>/dev/null || true
+pkill -9 -f "main" 2>/dev/null || true
 kill -9 $(lsof -t -i:9095) 2>/dev/null || true
 kill -9 $(lsof -t -i:3080) 2>/dev/null || true
 sleep 1
 
-# 3. Detect Node.js version >= 18
+# 3. Detect Node.js binary (v18/v20)
 NODE_BIN="node"
 if [ -f "/opt/cpanel/ea-nodejs20/bin/node" ]; then
     NODE_BIN="/opt/cpanel/ea-nodejs20/bin/node"
@@ -23,14 +24,17 @@ fi
 
 echo "Using Node Binary: $NODE_BIN ($($NODE_BIN -v 2>&1))"
 
-# 4. Start Go Backend on Port 9095
+# 4. Start Go Backend with GOMAXPROCS=1 (Prevents OS thread spawning error errno=11 on cPanel ulimit)
 cd ~/trgmix.online/backend
 tar xzf deploy/backend_linux.tar.gz 2>/dev/null || true
 chmod +x pkwl-backend-linux
+
+export GOMAXPROCS=1
+export GODEBUG=asyncpreempt=0
 PORT=9095 nohup ./pkwl-backend-linux > ~/trgmix.online/backend.log 2>&1 &
 sleep 2
 
-# 5. Deploy Next.js Standalone Frontend on Port 3080
+# 5. Start Next.js Standalone Frontend on Port 3080
 cd ~/trgmix.online/frontend
 rm -rf .next/standalone .next/static
 mkdir -p .next
@@ -42,10 +46,10 @@ mkdir -p ~/trgmix.online/_next
 cp -r .next/static/* ~/trgmix.online/_next/ 2>/dev/null || true
 
 cd ~/trgmix.online/frontend
-HOSTNAME=127.0.0.1 PORT=3080 NEXT_PUBLIC_API_URL=https://trgmix.online nohup $NODE_BIN .next/standalone/server.js > ~/trgmix.online/node_frontend.log 2>&1 &
+HOSTNAME=127.0.0.1 PORT=3080 NEXT_PUBLIC_API_URL=https://trgmix.online nohup $NODE_BIN --max-old-space-size=256 .next/standalone/server.js > ~/trgmix.online/node_frontend.log 2>&1 &
 sleep 3
 
-# 6. Write index.php with fallback proxy and exact error output
+# 6. Overwrite index.php with self-healing reverse proxy
 cat << 'EOF' > ~/trgmix.online/index.php
 <?php
 // PT. Putra Kawan Lama - Self-Healing Reverse Proxy
@@ -81,11 +85,11 @@ if ($response === false) {
     $err = curl_error($ch);
     $log = @file_get_contents('/home/pitiagic/trgmix.online/node_frontend.log');
     echo "<div style='font-family:sans-serif;padding:30px;max-width:800px;margin:auto;'>";
-    echo "<h2 style='color:#e11d48;'>⚠️ Connection to Frontend Server Failed (Port 3080)</h2>";
+    echo "<h2 style='color:#e11d48;'>⚠️ Server Starting...</h2>";
     echo "<p>cURL Error: <code>$err</code></p>";
-    echo "<h3>Frontend Diagnostic Log:</h3>";
+    echo "<h3>Diagnostic Log:</h3>";
     echo "<pre style='background:#0f172a;color:#f8fafc;padding:16px;border-radius:8px;overflow-x:auto;'>";
-    echo htmlspecialchars($log ?: "Log file empty or not readable.");
+    echo htmlspecialchars(substr($log ?: "Initializing...", -1000));
     echo "</pre></div>";
     exit;
 }
