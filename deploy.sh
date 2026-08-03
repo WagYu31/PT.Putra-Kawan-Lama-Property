@@ -1,16 +1,14 @@
 #!/bin/bash
-echo "🚀 Starting Deployment inside Standalone Directory..."
+echo "🚀 Starting Deployment with Aggressive Process Cleanup..."
 
 # 1. Pull latest code
 cd ~/trgmix.online && git pull origin main
 
-# 2. Kill old hanging processes to free CPU/thread slots
-pkill -9 -f "node" 2>/dev/null || true
-pkill -9 -f "pkwl" 2>/dev/null || true
-pkill -9 -f "main" 2>/dev/null || true
-kill -9 $(lsof -t -i:9095) 2>/dev/null || true
-kill -9 $(lsof -t -i:3080) 2>/dev/null || true
-sleep 1
+# 2. Force kill all background node/go processes and sleep 3s to reclaim process slots
+pkill -9 -u $(whoami) -f "node" 2>/dev/null || true
+pkill -9 -u $(whoami) -f "pkwl" 2>/dev/null || true
+pkill -9 -u $(whoami) -f "main" 2>/dev/null || true
+sleep 3
 
 # 3. Detect Node.js binary (v18/v20)
 NODE_BIN="node"
@@ -24,7 +22,7 @@ fi
 
 echo "Using Node Binary: $NODE_BIN ($($NODE_BIN -v 2>&1))"
 
-# 4. Start Go Backend on Port 9095 (GOMAXPROCS=1 for cPanel thread safety)
+# 4. Start Go Backend on Port 9095 (Single-thread mode for cPanel safety)
 cd ~/trgmix.online/backend
 tar xzf deploy/backend_linux.tar.gz 2>/dev/null || true
 chmod +x pkwl-backend-linux
@@ -34,28 +32,27 @@ export GODEBUG=asyncpreempt=0
 PORT=9095 nohup ./pkwl-backend-linux > ~/trgmix.online/backend.log 2>&1 &
 sleep 2
 
-# 5. Extract & Prepare Next.js Standalone Frontend
+# 5. Extract & Launch Next.js Standalone Frontend on Port 3080
 cd ~/trgmix.online/frontend
 rm -rf .next/standalone .next/static
 mkdir -p .next
 tar xzf deploy/standalone.tar.gz -C .next/
 tar xzf deploy/next_static.tar.gz -C .next/
 
-# Copy static assets & public into standalone directory
 cp -r .next/static .next/standalone/.next/ 2>/dev/null || true
 cp -r public .next/standalone/ 2>/dev/null || true
 mkdir -p ~/trgmix.online/_next
 cp -r .next/static/* ~/trgmix.online/_next/ 2>/dev/null || true
 
-# CRITICAL FIX: Run server.js FROM INSIDE .next/standalone directory
+# Execute server.js inside standalone directory
 cd ~/trgmix.online/frontend/.next/standalone
 HOSTNAME=0.0.0.0 PORT=3080 NEXT_PUBLIC_API_URL=https://trgmix.online nohup $NODE_BIN server.js > ~/trgmix.online/node_frontend.log 2>&1 &
-sleep 3
+sleep 4
 
-# 6. Overwrite index.php with reverse proxy
+# 6. Overwrite index.php with self-healing reverse proxy
 cat << 'EOF' > ~/trgmix.online/index.php
 <?php
-// PT. Putra Kawan Lama - Self-Healing Reverse Proxy
+// PT. Putra Kawan Lama - Production Reverse Proxy
 $uri = $_SERVER['REQUEST_URI'];
 if (strpos($uri, '/api/') === 0 || strpos($uri, '/uploads/') === 0) {
     $target = 'http://127.0.0.1:9095' . $uri;
