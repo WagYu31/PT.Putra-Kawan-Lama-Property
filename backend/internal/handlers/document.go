@@ -25,10 +25,13 @@ func (h *DocumentHandler) Upload(c *gin.Context) {
 	if docType == "" {
 		docType = c.Query("type")
 	}
-
+	if docType == "" && c.Request.MultipartForm != nil {
+		if vals, ok := c.Request.MultipartForm.Value["type"]; ok && len(vals) > 0 {
+			docType = vals[0]
+		}
+	}
 	if docType == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Document type is required"})
-		return
+		docType = "ktp"
 	}
 
 	// Validate doc type
