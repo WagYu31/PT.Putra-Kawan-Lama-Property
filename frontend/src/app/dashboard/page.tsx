@@ -1660,7 +1660,7 @@ function CicilanManager() {
                 });
                 const data = await res.json();
                 const installBk = (data.bookings || []).filter((b: any) =>
-                    b.booking_type === 'purchase' && b.payment_method === 'installment'
+                    b.payment_method === 'installment' || b.installment_tenor > 0 || b.booking_type === 'purchase'
                 );
                 setBookings(installBk);
                 for (const bk of installBk) {
@@ -1683,7 +1683,7 @@ function CicilanManager() {
         try {
             if (!(window as any).snap) {
                 const s = document.createElement('script');
-                s.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
+                s.src = 'https://app.midtrans.com/snap/snap.js';
                 s.setAttribute('data-client-key', 'Mid-client-mGA7v04cXrux3KNF');
                 document.head.appendChild(s);
                 await new Promise(r => setTimeout(r, 2000));
