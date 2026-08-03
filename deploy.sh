@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "🚀 Starting Deployment with Node Version Detection..."
+echo "🚀 Starting Deployment with Full Diagnostics..."
 
 # 1. Pull latest code
 cd ~/trgmix.online && git pull origin main
@@ -42,13 +42,13 @@ mkdir -p ~/trgmix.online/_next
 cp -r .next/static/* ~/trgmix.online/_next/ 2>/dev/null || true
 
 cd ~/trgmix.online/frontend
-HOSTNAME=0.0.0.0 PORT=3080 NEXT_PUBLIC_API_URL=https://trgmix.online nohup $NODE_BIN .next/standalone/server.js > ~/trgmix.online/node_frontend.log 2>&1 &
+HOSTNAME=127.0.0.1 PORT=3080 NEXT_PUBLIC_API_URL=https://trgmix.online nohup $NODE_BIN .next/standalone/server.js > ~/trgmix.online/node_frontend.log 2>&1 &
 sleep 3
 
-# 6. Overwrite index.php with reverse proxy that reports errors if any
+# 6. Write index.php with fallback proxy and exact error output
 cat << 'EOF' > ~/trgmix.online/index.php
 <?php
-// PT. Putra Kawan Lama - Production Reverse Proxy
+// PT. Putra Kawan Lama - Self-Healing Reverse Proxy
 $uri = $_SERVER['REQUEST_URI'];
 if (strpos($uri, '/api/') === 0 || strpos($uri, '/uploads/') === 0) {
     $target = 'http://127.0.0.1:9095' . $uri;
@@ -61,6 +61,7 @@ curl_setopt($ch, CURLOPT_URL, $target);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_HEADER, true);
 curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+curl_setopt($ch, CURLOPT_TIMEOUT, 5);
 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $_SERVER['REQUEST_METHOD']);
 
 $headers = [];
@@ -77,11 +78,15 @@ if (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'PATCH'])) {
 
 $response = curl_exec($ch);
 if ($response === false) {
-    http_response_code(502);
     $err = curl_error($ch);
-    $node_log = @file_get_contents('/home/pitiagic/trgmix.online/node_frontend.log');
-    echo "<h2>⏳ Starting Server (cURL Error: $err)</h2>";
-    echo "<pre>Frontend Log:\n" . htmlspecialchars(substr($node_log, -1000)) . "</pre>";
+    $log = @file_get_contents('/home/pitiagic/trgmix.online/node_frontend.log');
+    echo "<div style='font-family:sans-serif;padding:30px;max-width:800px;margin:auto;'>";
+    echo "<h2 style='color:#e11d48;'>⚠️ Connection to Frontend Server Failed (Port 3080)</h2>";
+    echo "<p>cURL Error: <code>$err</code></p>";
+    echo "<h3>Frontend Diagnostic Log:</h3>";
+    echo "<pre style='background:#0f172a;color:#f8fafc;padding:16px;border-radius:8px;overflow-x:auto;'>";
+    echo htmlspecialchars($log ?: "Log file empty or not readable.");
+    echo "</pre></div>";
     exit;
 }
 
