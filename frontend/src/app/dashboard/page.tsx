@@ -1683,7 +1683,7 @@ function CicilanManager() {
         try {
             if (!(window as any).snap) {
                 const s = document.createElement('script');
-                s.src = 'https://app.midtrans.com/snap/snap.js';
+                s.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
                 s.setAttribute('data-client-key', 'Mid-client-mGA7v04cXrux3KNF');
                 document.head.appendChild(s);
                 await new Promise(r => setTimeout(r, 2000));

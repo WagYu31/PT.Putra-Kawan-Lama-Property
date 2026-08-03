@@ -10,7 +10,7 @@ sleep 2
 
 # 3. Ensure .env exists and MIDTRANS_IS_PRODUCTION is set to true
 if [ -f ~/trgmix.online/.env ]; then
-    sed -i 's/MIDTRANS_IS_PRODUCTION=false/MIDTRANS_IS_PRODUCTION=true/g' ~/trgmix.online/.env 2>/dev/null || true
+    sed -i 's/MIDTRANS_IS_PRODUCTION=true/MIDTRANS_IS_PRODUCTION=false/g' ~/trgmix.online/.env 2>/dev/null || true
     cp ~/trgmix.online/.env ~/trgmix.online/backend/.env 2>/dev/null || true
 fi
 
