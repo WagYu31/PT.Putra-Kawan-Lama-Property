@@ -1,21 +1,11 @@
 #!/bin/bash
-echo "🚀 Starting Deployment with CloudLinux & EasyApache Node Auto-Discovery..."
+echo "🚀 Starting Deployment (Node-First Launch Sequence)..."
 
-# 1. Kill old hanging processes
+# 1. Kill all processes and wait 3s to reclaim OS process slots completely
 pkill -9 -u $(whoami) -f "node|pkwl|main" 2>/dev/null || true
 sleep 3
 
-# 2. Start Go Backend on Port 9095 (Single-thread mode for cPanel safety)
-cd ~/trgmix.online/backend
-tar xzf deploy/backend_linux.tar.gz 2>/dev/null || true
-chmod +x pkwl-backend-linux
-
-export GOMAXPROCS=1
-export GODEBUG=asyncpreempt=0
-PORT=9095 nohup ./pkwl-backend-linux > ~/trgmix.online/backend.log 2>&1 &
-sleep 2
-
-# 3. Detect Node.js Binary across CloudLinux (alt-nodejs) and EasyApache (ea-nodejs)
+# 2. Detect Node.js Binary (CloudLinux alt-nodejs / EasyApache ea-nodejs)
 NODE_BIN="node"
 for path in \
     /opt/alt/alt-nodejs20/root/usr/bin/node \
@@ -33,9 +23,8 @@ do
 done
 
 echo "Found Node Binary: $NODE_BIN ($($NODE_BIN -v 2>&1))"
-echo "Initializing Node Frontend Server with $NODE_BIN ($($NODE_BIN -v 2>&1))..." > ~/trgmix.online/node_frontend.log
 
-# 4. Extract & Launch Next.js Standalone Frontend on Port 3080
+# 3. Extract & Launch Next.js Standalone Frontend FIRST (while process table is empty)
 cd ~/trgmix.online/frontend
 rm -rf .next/standalone .next/static
 mkdir -p .next
@@ -48,8 +37,20 @@ mkdir -p ~/trgmix.online/_next
 cp -r .next/static/* ~/trgmix.online/_next/ 2>/dev/null || true
 
 cd ~/trgmix.online/frontend/.next/standalone
+echo "Starting Node Frontend on Port 3080..." > ~/trgmix.online/node_frontend.log
 HOSTNAME=0.0.0.0 PORT=3080 NEXT_PUBLIC_API_URL=https://trgmix.online nohup $NODE_BIN server.js >> ~/trgmix.online/node_frontend.log 2>&1 &
 sleep 3
+
+# 4. Launch Go Backend SECOND (Port 9095, GOMAXPROCS=1 for cPanel safety)
+cd ~/trgmix.online/backend
+tar xzf deploy/backend_linux.tar.gz 2>/dev/null || true
+chmod +x pkwl-backend-linux
+
+export GOMAXPROCS=1
+export GODEBUG=asyncpreempt=0
+echo "Starting Go Backend on Port 9095..." > ~/trgmix.online/backend.log
+PORT=9095 nohup ./pkwl-backend-linux >> ~/trgmix.online/backend.log 2>&1 &
+sleep 2
 
 # 5. Overwrite index.php with self-healing reverse proxy
 cat << 'EOF' > ~/trgmix.online/index.php
@@ -107,8 +108,8 @@ foreach (explode("\r\n", substr($res, 0, $hsize)) as $h) {
 echo substr($res, $hsize);
 EOF
 
-echo "=== BACKEND LOG ==="
-cat ~/trgmix.online/backend.log | tail -n 5
 echo "=== FRONTEND NODE LOG ==="
 cat ~/trgmix.online/node_frontend.log | tail -n 5
+echo "=== BACKEND LOG ==="
+cat ~/trgmix.online/backend.log | tail -n 5
 echo "✅ DEPLOYMENT COMPLETED SUCCESSFULLY!"
