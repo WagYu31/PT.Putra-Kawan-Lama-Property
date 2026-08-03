@@ -1052,8 +1052,10 @@ function BookingManager() {
                                             {user?.role === 'customer' && b.status === 'completed' && b.booking_type !== 'survey' && (
                                                 <span style={{ color: '#10b981', fontSize: '0.8rem' }}>✅ Selesai</span>
                                             )}
-                                            {user?.role === 'customer' && b.booking_type === 'purchase' && b.status === 'pending' && (
-                                                <span style={{ color: '#f59e0b', fontSize: '0.8rem' }}>⏳ Menunggu pembayaran</span>
+                                            {user?.role === 'customer' && (b.booking_type === 'purchase' || b.booking_type === 'rental') && b.status === 'pending' && (
+                                                <button className="btn btn-sm btn-primary" onClick={() => { setPayModal(b); setPayMethod(b.payment_method || 'cash'); }}>
+                                                    💳 Bayar Sekarang
+                                                </button>
                                             )}
                                         </div>
                                     </td>
