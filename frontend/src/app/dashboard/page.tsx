@@ -269,7 +269,7 @@ function DashboardContent() {
                                     </div>
 
                                     {/* Info Card */}
-                                    <div style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.1), rgba(201,168,76,0.03))', border: '1px solid rgba(201,168,76,0.2)', borderRadius: '16px', padding: '1.5rem' }}>
+                                    <div style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.1), rgba(201,168,76,0.03))', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.5rem' }}>
                                         <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--gold-primary)', marginBottom: '0.75rem' }}>💡 Tips</h3>
                                         <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                             <li style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>• Jadwalkan survey terlebih dahulu sebelum membeli</li>
@@ -1020,7 +1020,7 @@ function BookingManager() {
                                             )}
                                             {/* Purchase/Rental CONFIRMED + no docs → Upload Dokumen */}
                                             {user?.role === 'customer' && b.status === 'confirmed' && (b.booking_type === 'purchase' || b.booking_type === 'rental') && (!b.doc_status || b.doc_status === '' || b.doc_status === 'doc_rejected') && (
-                                                <button className="btn btn-sm" style={{ background: '#3b82f6', color: '#fff' }} onClick={() => setDocModal(b)}>
+                                                <button className="btn btn-sm" style={{ background: '#3b82f6', color: 'var(--text-primary)' }} onClick={() => setDocModal(b)}>
                                                     📄 Upload Dokumen
                                                 </button>
                                             )}
@@ -1036,7 +1036,7 @@ function BookingManager() {
                                                 </button>
                                             )}
                                             {user?.role === 'admin' && (b.booking_type === 'purchase' || b.booking_type === 'rental') && b.doc_status === 'doc_pending' && (
-                                                <button className="btn btn-sm" style={{ background: '#8b5cf6', color: '#fff' }} onClick={() => setDocReviewModal(b)}>
+                                                <button className="btn btn-sm" style={{ background: '#8b5cf6', color: 'var(--text-primary)' }} onClick={() => setDocReviewModal(b)}>
                                                     📋 Review Dokumen
                                                 </button>
                                             )}
@@ -1071,9 +1071,9 @@ function BookingManager() {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }} onClick={() => !isPaying && setPayModal(null)}>
                     <div style={{
-                        background: 'var(--bg-card, #1a1f2e)', borderRadius: 16,
+                        background: 'var(--bg-card)', borderRadius: 16,
                         padding: 32, maxWidth: 480, width: '90%',
-                        border: '1px solid rgba(201,168,76,0.2)',
+                        border: '1px solid var(--border-color)',
                         boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
                     }} onClick={e => e.stopPropagation()}>
                         <h3 style={{ marginBottom: 20 }}>💳 Pembayaran</h3>
@@ -1288,8 +1288,8 @@ function DealModal({ booking, token, onClose }: { booking: any; token: string; o
     };
 
     const inputStyle = {
-        width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)',
-        background: 'rgba(0,0,0,0.2)', color: '#fff', fontSize: '0.9rem',
+        width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border-color)',
+        background: 'var(--bg-tertiary)', color: 'var(--text-primary)', fontSize: '0.9rem',
     };
 
     return (
@@ -1298,8 +1298,8 @@ function DealModal({ booking, token, onClose }: { booking: any; token: string; o
             alignItems: 'center', justifyContent: 'center', zIndex: 1000,
         }}>
             <div onClick={e => e.stopPropagation()} style={{
-                background: '#1a1f2e', borderRadius: 16, padding: 32, width: '90%', maxWidth: 500,
-                border: '1px solid rgba(201,168,76,0.2)', maxHeight: '85vh', overflowY: 'auto',
+                background: 'var(--bg-card)', borderRadius: 16, padding: 32, width: '90%', maxWidth: 500,
+                border: '1px solid var(--border-color)', maxHeight: '85vh', overflowY: 'auto',
             }}>
                 <h2 style={{ marginBottom: 4 }}>🏠 Lanjut Proses</h2>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: 20 }}>
@@ -1311,12 +1311,12 @@ function DealModal({ booking, token, onClose }: { booking: any; token: string; o
                     <button onClick={() => setDealType('purchase')} style={{
                         flex: 1, padding: 12, borderRadius: 10, border: 'none', cursor: 'pointer',
                         background: dealType === 'purchase' ? 'var(--gold)' : 'rgba(255,255,255,0.05)',
-                        color: dealType === 'purchase' ? '#000' : '#fff', fontWeight: 600,
+                        color: dealType === 'purchase' ? 'var(--bg-primary)' : 'var(--text-primary)', fontWeight: 600,
                     }}>🏷️ Beli</button>
                     <button onClick={() => setDealType('rental')} style={{
                         flex: 1, padding: 12, borderRadius: 10, border: 'none', cursor: 'pointer',
                         background: dealType === 'rental' ? 'var(--gold)' : 'rgba(255,255,255,0.05)',
-                        color: dealType === 'rental' ? '#000' : '#fff', fontWeight: 600,
+                        color: dealType === 'rental' ? 'var(--bg-primary)' : 'var(--text-primary)', fontWeight: 600,
                     }}>🔑 Sewa</button>
                 </div>
 
@@ -1327,12 +1327,12 @@ function DealModal({ booking, token, onClose }: { booking: any; token: string; o
                             <button onClick={() => setPayMethod('cash')} style={{
                                 flex: 1, padding: 10, borderRadius: 8, border: 'none', cursor: 'pointer',
                                 background: payMethod === 'cash' ? '#10b981' : 'rgba(255,255,255,0.05)',
-                                color: '#fff', fontWeight: 600, fontSize: '0.85rem',
+                                color: 'var(--text-primary)', fontWeight: 600, fontSize: '0.85rem',
                             }}>💵 Cash</button>
                             <button onClick={() => setPayMethod('installment')} style={{
                                 flex: 1, padding: 10, borderRadius: 8, border: 'none', cursor: 'pointer',
                                 background: payMethod === 'installment' ? '#3b82f6' : 'rgba(255,255,255,0.05)',
-                                color: '#fff', fontWeight: 600, fontSize: '0.85rem',
+                                color: 'var(--text-primary)', fontWeight: 600, fontSize: '0.85rem',
                             }}>📋 Cicilan</button>
                         </div>
                         {payMethod === 'installment' && (
@@ -1343,7 +1343,7 @@ function DealModal({ booking, token, onClose }: { booking: any; token: string; o
                                         <button key={t} onClick={() => setTenor(t)} style={{
                                             flex: 1, padding: 10, borderRadius: 8, border: 'none', cursor: 'pointer',
                                             background: tenor === t ? '#3b82f6' : 'rgba(255,255,255,0.05)',
-                                            color: '#fff', fontWeight: 600,
+                                            color: 'var(--text-primary)', fontWeight: 600,
                                         }}>{t} bulan</button>
                                     ))}
                                 </div>
@@ -1376,7 +1376,7 @@ function DealModal({ booking, token, onClose }: { booking: any; token: string; o
 
                 <button onClick={handleSubmit} disabled={submitting} style={{
                     width: '100%', padding: 14, borderRadius: 12, border: 'none', cursor: 'pointer',
-                    background: 'var(--gold)', color: '#000', fontWeight: 700, fontSize: '1rem',
+                    background: 'var(--gold-gradient)', color: 'var(--bg-primary)', fontWeight: 700, fontSize: '1rem',
                     opacity: submitting ? 0.6 : 1,
                 }}>
                     {submitting ? '⏳ Memproses...' : dealType === 'purchase' ? '🏷️ Buat Booking Pembelian' : '🔑 Buat Booking Sewa'}
@@ -1434,8 +1434,8 @@ function DocumentUploadModal({ booking, token, onClose }: { booking: any; token:
             alignItems: 'center', justifyContent: 'center', zIndex: 1000,
         }}>
             <div onClick={e => e.stopPropagation()} style={{
-                background: '#1a1f2e', borderRadius: 16, padding: 32, width: '90%', maxWidth: 550,
-                border: '1px solid rgba(201,168,76,0.2)',
+                background: 'var(--bg-card)', borderRadius: 16, padding: 32, width: '90%', maxWidth: 550,
+                border: '1px solid var(--border-color)',
             }}>
                 <h2 style={{ marginBottom: 8 }}>📄 Upload Dokumen</h2>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: 24 }}>
@@ -1447,7 +1447,7 @@ function DocumentUploadModal({ booking, token, onClose }: { booking: any; token:
                     return (
                         <div key={type} style={{
                             padding: 16, marginBottom: 12, borderRadius: 10,
-                            background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+                            background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)',
                         }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                                 <strong>{typeLabels[type] || type}</strong>
@@ -1472,7 +1472,7 @@ function DocumentUploadModal({ booking, token, onClose }: { booking: any; token:
                             {(!existing || existing.status === 'rejected') && (
                                 <label style={{
                                     display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 8,
-                                    background: '#3b82f6', color: '#fff', cursor: 'pointer', fontSize: '0.8rem',
+                                    background: '#3b82f6', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.8rem',
                                 }}>
                                     {uploading === type ? '⏳ Mengupload...' : (existing ? '🔄 Upload Ulang' : '📤 Pilih File')}
                                     <input type="file" accept=".jpg,.jpeg,.png,.pdf" style={{ display: 'none' }}
@@ -1486,7 +1486,7 @@ function DocumentUploadModal({ booking, token, onClose }: { booking: any; token:
 
                 <button onClick={onClose} style={{
                     width: '100%', padding: 12, marginTop: 8, background: 'transparent',
-                    border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'var(--text-muted)', cursor: 'pointer',
+                    border: '1px solid var(--border-color)', borderRadius: 10, color: 'var(--text-muted)', cursor: 'pointer',
                 }}>Tutup</button>
             </div>
         </div>
@@ -1530,8 +1530,8 @@ function DocumentReviewModal({ booking, token, onClose }: { booking: any; token:
             alignItems: 'center', justifyContent: 'center', zIndex: 1000,
         }}>
             <div onClick={e => e.stopPropagation()} style={{
-                background: '#1a1f2e', borderRadius: 16, padding: 32, width: '90%', maxWidth: 600,
-                border: '1px solid rgba(201,168,76,0.2)', maxHeight: '80vh', overflowY: 'auto',
+                background: 'var(--bg-card)', borderRadius: 16, padding: 32, width: '90%', maxWidth: 600,
+                border: '1px solid var(--border-color)', maxHeight: '80vh', overflowY: 'auto',
             }}>
                 <h2 style={{ marginBottom: 8 }}>📋 Review Dokumen</h2>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: 20 }}>
@@ -1543,7 +1543,7 @@ function DocumentReviewModal({ booking, token, onClose }: { booking: any; token:
                 ) : docs.map(doc => (
                     <div key={doc.id} style={{
                         padding: 16, marginBottom: 12, borderRadius: 10,
-                        background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+                        background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)',
                     }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                             <strong>{typeLabels[doc.type] || doc.type}</strong>
@@ -1563,18 +1563,18 @@ function DocumentReviewModal({ booking, token, onClose }: { booking: any; token:
                             <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                                 <button onClick={() => verifyDoc(doc.id, 'approve')} style={{
                                     padding: '6px 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                                    background: '#10b981', color: '#fff', fontSize: '0.8rem',
+                                    background: '#10b981', color: 'var(--text-primary)', fontSize: '0.8rem',
                                 }}>✅ Setujui</button>
                                 {rejectingId === doc.id ? (
                                     <div style={{ display: 'flex', gap: 4, flex: 1 }}>
                                         <input value={rejectReason} onChange={e => setRejectReason(e.target.value)}
                                             placeholder="Alasan penolakan..." style={{
-                                                flex: 1, padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)',
-                                                background: 'rgba(0,0,0,0.2)', color: '#fff', fontSize: '0.8rem',
+                                                flex: 1, padding: '6px 10px', borderRadius: 8, border: '1px solid var(--border-color)',
+                                                background: 'var(--bg-tertiary)', color: 'var(--text-primary)', fontSize: '0.8rem',
                                             }} />
                                         <button onClick={() => verifyDoc(doc.id, 'reject', rejectReason)} style={{
                                             padding: '6px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                                            background: '#ef4444', color: '#fff', fontSize: '0.8rem',
+                                            background: '#ef4444', color: 'var(--text-primary)', fontSize: '0.8rem',
                                         }}>Tolak</button>
                                     </div>
                                 ) : (
@@ -1599,7 +1599,7 @@ function DocumentReviewModal({ booking, token, onClose }: { booking: any; token:
 
                 <button onClick={onClose} style={{
                     width: '100%', padding: 12, marginTop: 8, background: 'transparent',
-                    border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'var(--text-muted)', cursor: 'pointer',
+                    border: '1px solid var(--border-color)', borderRadius: 10, color: 'var(--text-muted)', cursor: 'pointer',
                 }}>Tutup</button>
             </div>
         </div>
@@ -1713,7 +1713,7 @@ function CicilanManager() {
 
                     return (
                         <div key={bk.id} style={{
-                            background: 'var(--bg-card, #1a1f2e)', borderRadius: 16,
+                            background: 'var(--bg-card)', borderRadius: 16,
                             border: '1px solid rgba(201,168,76,0.15)', overflow: 'hidden',
                         }}>
                             {/* Header */}
@@ -1742,7 +1742,7 @@ function CicilanManager() {
 
                             {/* Progress */}
                             <div style={{ padding: '0 16px 16px' }}>
-                                <div style={{ height: 8, borderRadius: 4, background: 'rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+                                <div style={{ height: 8, borderRadius: 4, background: 'var(--bg-tertiary)', overflow: 'hidden' }}>
                                     <div style={{
                                         height: '100%', borderRadius: 4, width: `${progress}%`,
                                         background: progress === 100
@@ -1897,7 +1897,7 @@ function FavoritesTab() {
                     const img = getImg();
                     return (
                         <div key={fav.id} onClick={() => window.open(`/properties/${fav.property_id}`, '_blank')} style={{
-                            background: 'var(--bg-card, #1a1f2e)', borderRadius: 12,
+                            background: 'var(--bg-card)', borderRadius: 12,
                             border: '1px solid rgba(201,168,76,0.1)', overflow: 'hidden',
                             transition: 'transform 0.2s', cursor: 'pointer',
                         }}
@@ -1910,7 +1910,7 @@ function FavoritesTab() {
                                     position: 'absolute', top: 10, left: 10, padding: '3px 10px',
                                     borderRadius: 6, fontSize: '0.7rem', fontWeight: 600,
                                     background: p.type === 'sell' ? 'rgba(16,185,129,0.9)' : 'rgba(59,130,246,0.9)',
-                                    color: '#fff',
+                                    color: 'var(--text-primary)',
                                 }}>{p.type === 'sell' ? 'Dijual' : 'Disewa'}</span>
                                 <button onClick={(e) => { e.stopPropagation(); removeFavorite(fav.property_id); }} style={{
                                     position: 'absolute', top: 10, right: 10, background: 'rgba(0,0,0,0.5)',
@@ -1920,11 +1920,11 @@ function FavoritesTab() {
                                 }} title="Hapus dari favorit">❤️</button>
                             </div>
                             <div style={{ padding: '16px' }}>
-                                <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 4, color: '#fff' }}>{p.title}</h3>
+                                <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 4, color: 'var(--text-primary)' }}>{p.title}</h3>
                                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 8 }}>📍 {p.city}</p>
                                 <p style={{ color: '#c9a84c', fontWeight: 700, fontSize: '1rem' }}>{fmtPrice(p.price)}</p>
                                 {p.bedrooms > 0 && (
-                                    <div style={{ display: 'flex', gap: 12, marginTop: 8, fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>
+                                    <div style={{ display: 'flex', gap: 12, marginTop: 8, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                                         <span>🛏 {p.bedrooms}</span>
                                         <span>🚿 {p.bathrooms}</span>
                                         <span>📐 {p.land_area} m²</span>
@@ -1982,7 +1982,7 @@ function NotificationBell() {
                 🔔
                 {unreadCount > 0 && (
                     <span style={{
-                        position: 'absolute', top: -2, right: -2, background: '#ef4444', color: '#fff',
+                        position: 'absolute', top: -2, right: -2, background: '#ef4444', color: 'var(--text-primary)',
                         borderRadius: '50%', width: 18, height: 18, fontSize: '0.65rem', fontWeight: 700,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>{unreadCount > 9 ? '9+' : unreadCount}</span>
@@ -1991,18 +1991,18 @@ function NotificationBell() {
             {showPanel && (
                 <div style={{
                     position: 'absolute', top: '100%', right: 0, width: 360, maxHeight: 420,
-                    background: '#1a1f2e', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 12,
+                    background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 12,
                     boxShadow: '0 8px 32px rgba(0,0,0,0.3)', zIndex: 1000, overflow: 'hidden',
                 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                        <h4 style={{ fontSize: '0.95rem', fontWeight: 600, color: '#fff' }}>🔔 Notifikasi</h4>
+                        <h4 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-primary)' }}>🔔 Notifikasi</h4>
                         {unreadCount > 0 && (
                             <button onClick={markAllRead} style={{ background: 'none', border: 'none', color: '#c9a84c', cursor: 'pointer', fontSize: '0.75rem' }}>Tandai semua dibaca</button>
                         )}
                     </div>
                     <div style={{ overflowY: 'auto', maxHeight: 350 }}>
                         {notifs.length === 0 ? (
-                            <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>
+                            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
                                 <p style={{ fontSize: '1.5rem', marginBottom: 4 }}>🔕</p>
                                 <p style={{ fontSize: '0.85rem' }}>Belum ada notifikasi</p>
                             </div>
@@ -2013,11 +2013,11 @@ function NotificationBell() {
                                 cursor: 'default',
                             }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                    <p style={{ fontSize: '0.85rem', fontWeight: n.is_read ? 400 : 600, color: '#fff', marginBottom: 4 }}>{n.title}</p>
+                                    <p style={{ fontSize: '0.85rem', fontWeight: n.is_read ? 400 : 600, color: 'var(--text-primary)', marginBottom: 4 }}>{n.title}</p>
                                     {!n.is_read && <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#c9a84c', flexShrink: 0, marginTop: 4 }} />}
                                 </div>
-                                <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.4 }}>{n.message}</p>
-                                <p style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.25)', marginTop: 4 }}>
+                                <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>{n.message}</p>
+                                <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: 4 }}>
                                     {new Date(n.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                 </p>
                             </div>
@@ -2222,7 +2222,7 @@ function ProfileManager() {
                             position: 'absolute', bottom: 0, left: 0, right: 0,
                             height: '50%', background: 'rgba(0,0,0,0.5)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '0.6rem', color: '#fff', fontWeight: 600,
+                            fontSize: '0.6rem', color: 'var(--text-primary)', fontWeight: 600,
                             opacity: uploading ? 1 : 0,
                             transition: 'opacity 0.2s',
                         }}>

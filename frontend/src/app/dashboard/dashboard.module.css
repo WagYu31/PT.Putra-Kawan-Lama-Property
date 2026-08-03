@@ -332,11 +332,68 @@
 }
 
 :global([data-theme="light"]) .topbar {
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.95);
+    border-bottom-color: #e2e8f0;
 }
 
 :global([data-theme="light"]) .sidebar {
     background: #ffffff;
+    border-right-color: #e2e8f0;
+}
+
+:global([data-theme="light"]) .statCard {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+:global([data-theme="light"]) .tableContainer {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+:global([data-theme="light"]) .table th {
+    color: #475569;
+    border-bottom-color: #e2e8f0;
+}
+
+:global([data-theme="light"]) .table td {
+    color: #1e293b;
+    border-bottom-color: #f1f5f9;
+}
+
+:global([data-theme="light"]) .table tr:hover td {
+    background: #f8fafc;
+    color: #0f172a;
+}
+
+:global([data-theme="light"]) .modalContent {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+:global([data-theme="light"]) .modalHeader {
+    border-bottom-color: #e2e8f0;
+}
+
+:global([data-theme="light"]) .modalFooter {
+    border-top-color: #e2e8f0;
+}
+
+:global([data-theme="light"]) .formGroup input,
+:global([data-theme="light"]) .formGroup select,
+:global([data-theme="light"]) .formGroup textarea {
+    background: #f8fafc;
+    color: #0f172a;
+    border-color: #cbd5e1;
+}
+
+:global([data-theme="light"]) .facilityChip {
+    background: #f1f5f9;
+    color: #334155;
+    border-color: #cbd5e1;
 }
 
 /* Overview 2-column layout */

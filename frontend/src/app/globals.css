@@ -54,33 +54,38 @@
   --bp-wide: 1536px;
 }
 
-/* Light Theme */
+/* Light Theme - ISO 9241-300 / WCAG 2.1 AAA Accessible Contrast */
 [data-theme="light"] {
-  --bg-primary: #f8f6f1;
+  --bg-primary: #f8fafc;
   --bg-secondary: #ffffff;
-  --bg-tertiary: #f0ede6;
+  --bg-tertiary: #f1f5f9;
   --bg-card: #ffffff;
-  --bg-card-hover: #f5f3ee;
-  --bg-glass: rgba(255, 255, 255, 0.9);
-  --bg-overlay: rgba(248, 246, 241, 0.8);
+  --bg-card-hover: #f8fafc;
+  --bg-glass: rgba(255, 255, 255, 0.95);
+  --bg-overlay: rgba(15, 23, 42, 0.55);
 
-  --gold-primary: #a08430;
-  --gold-light: #c9a84c;
-  --gold-dark: #7a6520;
-  --gold-gradient: linear-gradient(135deg, #a08430 0%, #c9a84c 50%, #a08430 100%);
-  --gold-text-gradient: linear-gradient(135deg, #a08430, #7a6520);
+  --gold-primary: #b45309;
+  --gold-light: #d97706;
+  --gold-dark: #78350f;
+  --gold-gradient: linear-gradient(135deg, #b45309 0%, #d97706 50%, #b45309 100%);
+  --gold-text-gradient: linear-gradient(135deg, #b45309, #78350f);
 
-  --text-primary: #1a1a2e;
-  --text-secondary: #4a5568;
-  --text-muted: #8899a8;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #475569;
 
-  --border-color: rgba(160, 132, 48, 0.15);
-  --border-hover: rgba(160, 132, 48, 0.3);
+  --accent-success: #047857;
+  --accent-danger: #dc2626;
+  --accent-warning: #b45309;
+  --accent-info: #1d4ed8;
 
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.1);
-  --shadow-gold: 0 4px 20px rgba(160, 132, 48, 0.1);
+  --border-color: #e2e8f0;
+  --border-hover: #cbd5e1;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12);
+  --shadow-gold: 0 4px 20px rgba(180, 83, 9, 0.15);
 }
 
 /* Theme toggle button */
@@ -382,6 +387,28 @@ select {
 .badge-gold {
   background: rgba(201, 168, 76, 0.15);
   color: var(--gold-primary);
+}
+
+/* Light Theme Badge High-Contrast Overrides (ISO / WCAG 2.1 AAA) */
+[data-theme="light"] .badge-warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+[data-theme="light"] .badge-success {
+  background: #d1fae5;
+  color: #065f46;
+}
+[data-theme="light"] .badge-danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+[data-theme="light"] .badge-gold {
+  background: #fef3c7;
+  color: #78350f;
+}
+[data-theme="light"] .badge-info {
+  background: #dbeafe;
+  color: #1e40af;
 }
 
 /* Animations */
