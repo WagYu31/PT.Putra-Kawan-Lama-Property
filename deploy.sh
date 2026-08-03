@@ -5,25 +5,32 @@ echo "🚀 Starting Deployment with Static HTML Export & Go Backend..."
 cd ~/trgmix.online && git pull origin main
 
 # 2. Kill any old background processes
-pkill -9 -u $(whoami) -f "node|pkwl|main" 2>/dev/null || true
+pkill -9 -u $(whoami) -f "node|go|pkwl|main" 2>/dev/null || true
 sleep 2
 
-# 3. Extract Static HTML/CSS/JS export directly into ~/trgmix.online/
+# 3. Ensure .env exists and MIDTRANS_IS_PRODUCTION is set to true for Production keys
+if [ -f ~/trgmix.online/.env ]; then
+    sed -i 's/MIDTRANS_IS_PRODUCTION=false/MIDTRANS_IS_PRODUCTION=true/g' ~/trgmix.online/.env 2>/dev/null || true
+    cp ~/trgmix.online/.env ~/trgmix.online/backend/.env 2>/dev/null || true
+fi
+
+# 4. Extract Static HTML/CSS/JS export directly into ~/trgmix.online/
 cd ~/trgmix.online
 tar xzf frontend/deploy/out.tar.gz 2>/dev/null || true
 
-# 4. Start Go Backend on Port 9095 (Single-thread mode for cPanel safety)
+# 5. Start Go Backend on Port 9095 (Single-thread mode for cPanel safety)
 cd ~/trgmix.online/backend
 tar xzf deploy/backend_linux.tar.gz 2>/dev/null || true
 chmod +x pkwl-backend-linux
 
 export GOMAXPROCS=1
 export GODEBUG=asyncpreempt=0
+
 echo "Starting Go Backend on Port 9095..." > ~/trgmix.online/backend.log
 PORT=9095 nohup ./pkwl-backend-linux >> ~/trgmix.online/backend.log 2>&1 &
 sleep 2
 
-# 5. Overwrite index.php with API Reverse Proxy & Static Asset Gateway
+# 6. Overwrite index.php with API Reverse Proxy & Static Asset Gateway
 cat << 'EOF' > ~/trgmix.online/index.php
 <?php
 // PT. Putra Kawan Lama - High Performance Gateway
