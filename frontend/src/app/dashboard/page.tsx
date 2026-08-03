@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AuthProvider, useAuth } from '@/lib/auth';
+import { API_URL } from '@/lib/api';
 import { ThemeToggle } from '@/lib/theme';
 import { LiveChatProvider, useLiveChat } from '@/lib/livechat';
 import AdminLiveChat from '@/components/dashboard/AdminLiveChat';
@@ -33,7 +34,7 @@ function DashboardContent() {
 
     useEffect(() => {
         if (!user) return;
-        const API = process.env.NEXT_PUBLIC_API_URL || '${process.env.NEXT_PUBLIC_API_URL || ""}';
+        const API = API_URL;
         const token = localStorage.getItem('pkwl_token');
         const headers: Record<string, string> = { 'Authorization': `Bearer ${token}` };
         const fetchStats = async () => {
@@ -382,7 +383,7 @@ function PropertyManager() {
 
     const fetchProps = async () => {
         try {
-            const res = await fetch('${process.env.NEXT_PUBLIC_API_URL || ""}/api/properties', {
+            const res = await fetch(`${API_URL}/api/properties`, {
                 headers: token ? { Authorization: `Bearer ${token}` } : {},
             });
             const data = await res.json();
@@ -415,7 +416,7 @@ function PropertyManager() {
         try {
             const url = editId
                 ? `${process.env.NEXT_PUBLIC_API_URL || ""}/api/properties/${editId}`
-                : '${process.env.NEXT_PUBLIC_API_URL || ""}/api/properties';
+                : `${API_URL}/api/properties`;
             const res = await fetch(url, {
                 method: editId ? 'PUT' : 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -833,7 +834,7 @@ function BookingManager() {
             const token = localStorage.getItem('pkwl_token');
             if (!token) return;
             const url = filter === 'all'
-                ? '${process.env.NEXT_PUBLIC_API_URL || ""}/api/bookings'
+                ? `${API_URL}/api/bookings`
                 : `${process.env.NEXT_PUBLIC_API_URL || ""}/api/bookings?status=${filter}`;
             const res = await fetch(url, {
                 headers: { Authorization: `Bearer ${token}` },
@@ -877,7 +878,7 @@ function BookingManager() {
         setIsPaying(true);
         try {
             // Step 1: Create purchase booking
-            const purchaseRes = await fetch('${process.env.NEXT_PUBLIC_API_URL || ""}/api/bookings/purchase', {
+            const purchaseRes = await fetch(`${API_URL}/api/bookings/purchase`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -891,7 +892,7 @@ function BookingManager() {
             const bookingId = purchaseData.booking?.id || purchaseData.id;
 
             // Step 2: Get Snap token
-            const snapRes = await fetch('${process.env.NEXT_PUBLIC_API_URL || ""}/api/payments/snap', {
+            const snapRes = await fetch(`${API_URL}/api/payments/snap`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ booking_id: bookingId }),
@@ -1251,7 +1252,7 @@ function DealModal({ booking, token, onClose }: { booking: any; token: string; o
         try {
             let res;
             if (dealType === 'purchase') {
-                res = await fetch('${process.env.NEXT_PUBLIC_API_URL || ""}/api/bookings/purchase', {
+                res = await fetch(`${API_URL}/api/bookings/purchase`, {
                     method: 'POST',
                     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1263,7 +1264,7 @@ function DealModal({ booking, token, onClose }: { booking: any; token: string; o
                 });
             } else {
                 if (!startDate) { alert('Pilih tanggal mulai sewa'); setSubmitting(false); return; }
-                res = await fetch('${process.env.NEXT_PUBLIC_API_URL || ""}/api/bookings/rental', {
+                res = await fetch(`${API_URL}/api/bookings/rental`, {
                     method: 'POST',
                     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1627,7 +1628,7 @@ function CicilanManager() {
         if (!token) return;
         (async () => {
             try {
-                const res = await fetch('${process.env.NEXT_PUBLIC_API_URL || ""}/api/bookings', {
+                const res = await fetch(`${API_URL}/api/bookings`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 const data = await res.json();
@@ -1660,7 +1661,7 @@ function CicilanManager() {
                 document.head.appendChild(s);
                 await new Promise(r => setTimeout(r, 2000));
             }
-            const res = await fetch('${process.env.NEXT_PUBLIC_API_URL || ""}/api/payments/installment/pay', {
+            const res = await fetch(`${API_URL}/api/payments/installment/pay`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                 body: JSON.stringify({ payment_id: paymentId }),
@@ -1832,7 +1833,7 @@ function FavoritesTab() {
         if (!token) return;
         (async () => {
             try {
-                const res = await fetch('${process.env.NEXT_PUBLIC_API_URL || ""}/api/favorites', {
+                const res = await fetch(`${API_URL}/api/favorites`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 if (res.ok) {
@@ -1946,7 +1947,7 @@ function NotificationBell() {
 
     useEffect(() => {
         if (!token) return;
-        const API = '${process.env.NEXT_PUBLIC_API_URL || ""}';
+        const API = API_URL;
         const headers = { Authorization: `Bearer ${token}` };
         const fetchNotifs = async () => {
             try {
@@ -1965,7 +1966,7 @@ function NotificationBell() {
 
     const markAllRead = async () => {
         if (!token) return;
-        await fetch('${process.env.NEXT_PUBLIC_API_URL || ""}/api/notifications/read-all', {
+        await fetch(`${API_URL}/api/notifications/read-all`, {
             method: 'PATCH', headers: { Authorization: `Bearer ${token}` },
         });
         setUnreadCount(0);
@@ -2051,7 +2052,7 @@ function ProfileManager() {
     const [changingPw, setChangingPw] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const API = process.env.NEXT_PUBLIC_API_URL || '${process.env.NEXT_PUBLIC_API_URL || ""}';
+    const API = API_URL;
 
     useEffect(() => {
         const token = localStorage.getItem('pkwl_token');
@@ -2388,7 +2389,7 @@ function AnalyticsWidget() {
 
     useEffect(() => {
         const token = localStorage.getItem('pkwl_token');
-        const API = process.env.NEXT_PUBLIC_API_URL || '${process.env.NEXT_PUBLIC_API_URL || ""}';
+        const API = API_URL;
         const fetchStats = () => {
             fetch(`${API}/api/analytics/stats`, {
                 headers: { Authorization: `Bearer ${token}` },
