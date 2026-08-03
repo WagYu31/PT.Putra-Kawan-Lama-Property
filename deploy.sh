@@ -34,12 +34,12 @@ sleep 2
 HOSTNAME=0.0.0.0 PORT=3080 NEXT_PUBLIC_API_URL=https://trgmix.online nohup node .next/standalone/server.js > ~/trgmix.online/node_frontend.log 2>&1 &
 sleep 2
 
-# 4. Update index.php proxies
-sed -i 's/9090/9095/g' ~/trgmix.online/index.php 2>/dev/null || true
-sed -i 's/3075/3080/g' ~/trgmix.online/index.php 2>/dev/null || true
-sed -i 's/3070/3080/g' ~/trgmix.online/index.php 2>/dev/null || true
-sed -i 's/3065/3080/g' ~/trgmix.online/index.php 2>/dev/null || true
+# 4. Update index.php proxies with regex port matching
+sed -i -E 's/30[0-9]{2}/3080/g' ~/trgmix.online/index.php 2>/dev/null || true
+sed -i -E 's/90[0-9]{2}/9095/g' ~/trgmix.online/index.php 2>/dev/null || true
 
+echo "=== INDEX.PHP PROXY CONFIG ==="
+cat ~/trgmix.online/index.php | head -n 30
 echo "=== BACKEND LOG ==="
 cat ~/trgmix.online/backend.log | tail -n 6
 echo "=== FRONTEND LOG ==="
