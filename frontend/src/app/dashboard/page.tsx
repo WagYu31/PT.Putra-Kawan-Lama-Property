@@ -878,19 +878,22 @@ function BookingManager() {
 
         setIsPaying(true);
         try {
-            // Step 1: Create purchase booking
-            const purchaseRes = await fetch(`${API_URL}/api/bookings/purchase`, {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    property_id: booking.property_id,
-                    payment_method: payMethod,
-                    tenor: payMethod === 'installment' ? tenor : 0,
-                }),
-            });
-            if (!purchaseRes.ok) throw new Error('Gagal membuat booking pembelian');
-            const purchaseData = await purchaseRes.json();
-            const bookingId = purchaseData.booking?.id || purchaseData.id;
+            // Step 1: Use existing booking ID or create new purchase booking
+            let bookingId = booking.id;
+            if (!bookingId) {
+                const purchaseRes = await fetch(`${API_URL}/api/bookings/purchase`, {
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        property_id: booking.property_id,
+                        payment_method: payMethod,
+                        tenor: payMethod === 'installment' ? tenor : 0,
+                    }),
+                });
+                const purchaseData = await purchaseRes.json();
+                if (!purchaseRes.ok) throw new Error(purchaseData.error || 'Gagal membuat booking');
+                bookingId = purchaseData.booking?.id || purchaseData.id;
+            }
 
             // Step 2: Get Snap token
             const snapRes = await fetch(`${API_URL}/api/payments/snap`, {
@@ -898,8 +901,19 @@ function BookingManager() {
                 headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ booking_id: bookingId }),
             });
-            if (!snapRes.ok) throw new Error('Gagal memuat pembayaran');
             const snapData = await snapRes.json();
+
+            if (!snapRes.ok) {
+                if (snapData.error) {
+                    alert(`⚠️ ${snapData.error}`);
+                    if (snapData.doc_status === 'doc_pending' || !snapData.doc_status) {
+                        setPayModal(null);
+                        setDocModal(booking);
+                    }
+                    return;
+                }
+                throw new Error('Gagal memuat pembayaran');
+            }
 
             // Step 3: Open Midtrans popup
             (window as any).snap.pay(snapData.snap_token, {
