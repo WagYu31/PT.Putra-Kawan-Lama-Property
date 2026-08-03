@@ -1,18 +1,17 @@
 #!/bin/bash
-echo "🚀 Starting Deployment (Node-First Launch Sequence)..."
+echo "🚀 Starting Deployment with CloudLinux V8 Memory Tuning..."
 
-# 1. Kill all processes and wait 3s to reclaim OS process slots completely
+# 1. Kill all hanging processes and wait 3s to reclaim OS process slots completely
 pkill -9 -u $(whoami) -f "node|pkwl|main" 2>/dev/null || true
 sleep 3
 
-# 2. Detect Node.js Binary (CloudLinux alt-nodejs / EasyApache ea-nodejs)
+# 2. Detect Node.js Binary (Prefer Node 18 for CloudLinux cPanel stability, fallback Node 20)
 NODE_BIN="node"
 for path in \
-    /opt/alt/alt-nodejs20/root/usr/bin/node \
     /opt/alt/alt-nodejs18/root/usr/bin/node \
-    /opt/alt/alt-nodejs16/root/usr/bin/node \
-    /opt/cpanel/ea-nodejs20/bin/node \
     /opt/cpanel/ea-nodejs18/bin/node \
+    /opt/alt/alt-nodejs20/root/usr/bin/node \
+    /opt/cpanel/ea-nodejs20/bin/node \
     /usr/local/bin/node \
     /usr/bin/node
 do
@@ -24,7 +23,7 @@ done
 
 echo "Found Node Binary: $NODE_BIN ($($NODE_BIN -v 2>&1))"
 
-# 3. Extract & Launch Next.js Standalone Frontend FIRST (while process table is empty)
+# 3. Extract & Launch Next.js Standalone Frontend FIRST (with V8 max-old-space-size=256 to prevent CloudLinux SIGABRT core dump)
 cd ~/trgmix.online/frontend
 rm -rf .next/standalone .next/static
 mkdir -p .next
@@ -37,8 +36,8 @@ mkdir -p ~/trgmix.online/_next
 cp -r .next/static/* ~/trgmix.online/_next/ 2>/dev/null || true
 
 cd ~/trgmix.online/frontend/.next/standalone
-echo "Starting Node Frontend on Port 3080..." > ~/trgmix.online/node_frontend.log
-HOSTNAME=0.0.0.0 PORT=3080 NEXT_PUBLIC_API_URL=https://trgmix.online nohup $NODE_BIN server.js >> ~/trgmix.online/node_frontend.log 2>&1 &
+echo "Starting Node Frontend on Port 3080 with Node $NODE_BIN..." > ~/trgmix.online/node_frontend.log
+HOSTNAME=0.0.0.0 PORT=3080 NEXT_PUBLIC_API_URL=https://trgmix.online nohup $NODE_BIN --max-old-space-size=256 --max-semi-space-size=2 server.js >> ~/trgmix.online/node_frontend.log 2>&1 &
 sleep 3
 
 # 4. Launch Go Backend SECOND (Port 9095, GOMAXPROCS=1 for cPanel safety)
