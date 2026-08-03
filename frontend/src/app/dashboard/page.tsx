@@ -1242,13 +1242,13 @@ function BookingManager() {
             {docReviewModal && <DocumentReviewModal booking={docReviewModal} token={token!} onClose={() => { setDocReviewModal(null); fetchBookings(); }} />}
 
             {/* Deal Modal (Post-Survey) */}
-            {dealModal && <DealModal booking={dealModal} token={token!} onClose={() => { setDealModal(null); fetchBookings(); }} />}
+            {dealModal && <DealModal booking={dealModal} token={token!} onClose={() => { setDealModal(null); fetchBookings(); }} onPay={(b) => { setDealModal(null); setPayModal(b); fetchBookings(); }} fetchBookings={fetchBookings} />}
         </div>
     );
 }
 
 /* ========== DEAL MODAL (Post-Survey → Purchase/Rental) ========== */
-function DealModal({ booking, token, onClose }: { booking: any; token: string; onClose: () => void }) {
+function DealModal({ booking, token, onClose, onPay, fetchBookings }: { booking: any; token: string; onClose: () => void; onPay?: (b: any) => void; fetchBookings: () => void }) {
     const [dealType, setDealType] = useState<'purchase' | 'rental'>('purchase');
     const [payMethod, setPayMethod] = useState<'cash' | 'installment'>('cash');
     const [tenor, setTenor] = useState(12);
@@ -1294,8 +1294,14 @@ function DealModal({ booking, token, onClose }: { booking: any; token: string; o
                 });
             }
             if (res.ok) {
-                alert(dealType === 'purchase' ? '✅ Booking pembelian berhasil dibuat! Silakan upload dokumen.' : '✅ Booking sewa berhasil dibuat! Silakan upload dokumen.');
+                const data = await res.json();
                 onClose();
+                const newBooking = data.booking || data;
+                if (newBooking && onPay) {
+                    onPay(newBooking);
+                } else {
+                    fetchBookings();
+                }
             } else {
                 const d = await res.json();
                 alert(d.error || 'Gagal membuat booking');
