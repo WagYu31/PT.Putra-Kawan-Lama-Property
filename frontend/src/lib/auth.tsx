@@ -36,13 +36,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const savedToken = localStorage.getItem('pkwl_token');
-        const savedUser = localStorage.getItem('pkwl_user');
-        if (savedToken && savedUser) {
-            setToken(savedToken);
-            setUser(JSON.parse(savedUser));
+        try {
+            const savedToken = localStorage.getItem('pkwl_token');
+            const savedUser = localStorage.getItem('pkwl_user');
+            if (savedToken && savedUser && savedUser !== 'undefined') {
+                setToken(savedToken);
+                setUser(JSON.parse(savedUser));
+            }
+        } catch (e) {
+            console.error('Failed to parse saved user credentials', e);
+            localStorage.removeItem('pkwl_token');
+            localStorage.removeItem('pkwl_user');
+        } finally {
+            setIsLoading(false);
         }
-        setIsLoading(false);
     }, []);
 
     const login = async (email: string, password: string) => {

@@ -28,9 +28,12 @@ function DashboardContent() {
 
     useEffect(() => {
         if (!isLoading && !user) {
-            router.push('/auth/login');
+            window.location.href = '/auth/login';
         }
-    }, [user, isLoading, router]);
+    }, [user, isLoading]);
+
+    if (isLoading) return <div className={styles.loading}>Memuat data...</div>;
+    if (!user) return <div className={styles.loading}>Mengarahkan ke halaman login...</div>;
 
     useEffect(() => {
         if (!user) return;
