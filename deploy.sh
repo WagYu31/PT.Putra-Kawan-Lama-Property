@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "🚀 Starting Single-Thread Optimized Deployment..."
+echo "🚀 Starting Deployment inside Standalone Directory..."
 
 # 1. Pull latest code
 cd ~/trgmix.online && git pull origin main
@@ -24,7 +24,7 @@ fi
 
 echo "Using Node Binary: $NODE_BIN ($($NODE_BIN -v 2>&1))"
 
-# 4. Start Go Backend with GOMAXPROCS=1 (Prevents OS thread spawning error errno=11 on cPanel ulimit)
+# 4. Start Go Backend on Port 9095 (GOMAXPROCS=1 for cPanel thread safety)
 cd ~/trgmix.online/backend
 tar xzf deploy/backend_linux.tar.gz 2>/dev/null || true
 chmod +x pkwl-backend-linux
@@ -34,22 +34,25 @@ export GODEBUG=asyncpreempt=0
 PORT=9095 nohup ./pkwl-backend-linux > ~/trgmix.online/backend.log 2>&1 &
 sleep 2
 
-# 5. Start Next.js Standalone Frontend on Port 3080
+# 5. Extract & Prepare Next.js Standalone Frontend
 cd ~/trgmix.online/frontend
 rm -rf .next/standalone .next/static
 mkdir -p .next
 tar xzf deploy/standalone.tar.gz -C .next/
 tar xzf deploy/next_static.tar.gz -C .next/
 
+# Copy static assets & public into standalone directory
 cp -r .next/static .next/standalone/.next/ 2>/dev/null || true
+cp -r public .next/standalone/ 2>/dev/null || true
 mkdir -p ~/trgmix.online/_next
 cp -r .next/static/* ~/trgmix.online/_next/ 2>/dev/null || true
 
-cd ~/trgmix.online/frontend
-HOSTNAME=127.0.0.1 PORT=3080 NEXT_PUBLIC_API_URL=https://trgmix.online nohup $NODE_BIN --max-old-space-size=256 .next/standalone/server.js > ~/trgmix.online/node_frontend.log 2>&1 &
+# CRITICAL FIX: Run server.js FROM INSIDE .next/standalone directory
+cd ~/trgmix.online/frontend/.next/standalone
+HOSTNAME=0.0.0.0 PORT=3080 NEXT_PUBLIC_API_URL=https://trgmix.online nohup $NODE_BIN server.js > ~/trgmix.online/node_frontend.log 2>&1 &
 sleep 3
 
-# 6. Overwrite index.php with self-healing reverse proxy
+# 6. Overwrite index.php with reverse proxy
 cat << 'EOF' > ~/trgmix.online/index.php
 <?php
 // PT. Putra Kawan Lama - Self-Healing Reverse Proxy
