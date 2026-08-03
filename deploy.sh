@@ -1,7 +1,7 @@
 #!/bin/bash
-echo "🚀 Starting Ultra-Clean Production Deploy..."
+echo "🚀 Starting Deployment with Full Browser Diagnostics..."
 
-# 1. Kill old hanging processes to free CPU/thread slots
+# 1. Kill old processes
 pkill -9 -u $(whoami) -f "node|pkwl|main" 2>/dev/null || true
 sleep 3
 
@@ -27,17 +27,22 @@ cp -r public .next/standalone/ 2>/dev/null || true
 mkdir -p ~/trgmix.online/_next
 cp -r .next/static/* ~/trgmix.online/_next/ 2>/dev/null || true
 
-NODE_BIN=$(which node 2>/dev/null || echo "node")
-[ -f "/opt/cpanel/ea-nodejs20/bin/node" ] && NODE_BIN="/opt/cpanel/ea-nodejs20/bin/node"
-[ -f "/opt/cpanel/ea-nodejs18/bin/node" ] && NODE_BIN="/opt/cpanel/ea-nodejs18/bin/node"
+NODE_BIN="node"
+if [ -f "/opt/cpanel/ea-nodejs20/bin/node" ]; then
+    NODE_BIN="/opt/cpanel/ea-nodejs20/bin/node"
+elif [ -f "/opt/cpanel/ea-nodejs18/bin/node" ]; then
+    NODE_BIN="/opt/cpanel/ea-nodejs18/bin/node"
+elif [ -f "/usr/local/bin/node" ]; then
+    NODE_BIN="/usr/local/bin/node"
+fi
 
 echo "Using Node Binary: $NODE_BIN ($($NODE_BIN -v 2>&1))"
 
 cd ~/trgmix.online/frontend/.next/standalone
 HOSTNAME=0.0.0.0 PORT=3080 NEXT_PUBLIC_API_URL=https://trgmix.online nohup $NODE_BIN server.js > ~/trgmix.online/node_frontend.log 2>&1 &
-sleep 4
+sleep 3
 
-# 4. Overwrite index.php with ultra-fast reverse proxy
+# 4. Overwrite index.php with self-healing reverse proxy & full error output
 cat << 'EOF' > ~/trgmix.online/index.php
 <?php
 $uri = $_SERVER['REQUEST_URI'];
@@ -49,7 +54,7 @@ curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_HEADER => true,
     CURLOPT_FOLLOWLOCATION => true,
-    CURLOPT_TIMEOUT => 10,
+    CURLOPT_TIMEOUT => 5,
     CURLOPT_CUSTOMREQUEST => $_SERVER['REQUEST_METHOD']
 ]);
 
@@ -65,9 +70,21 @@ if (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'PATCH'])) {
 
 $res = curl_exec($ch);
 if ($res === false) {
-    echo "<div style='font-family:sans-serif;padding:30px;text-align:center;'>";
-    echo "<h2>⏳ Server Sedang Inisialisasi...</h2>";
-    echo "<p>Silakan tunggu 3 detik lalu refresh halaman.</p><div>";
+    $err = curl_error($ch);
+    $log = @file_get_contents('/home/pitiagic/trgmix.online/node_frontend.log');
+    $blog = @file_get_contents('/home/pitiagic/trgmix.online/backend.log');
+    echo "<div style='font-family:sans-serif;padding:30px;max-width:800px;margin:auto;'>";
+    echo "<h2 style='color:#e11d48;'>🔍 Diagnosa Koneksi Server (Port 3080 / 9095)</h2>";
+    echo "<p>Error cURL: <code>$err</code></p>";
+    echo "<h3>Frontend Node Log (/home/pitiagic/trgmix.online/node_frontend.log):</h3>";
+    echo "<pre style='background:#0f172a;color:#f8fafc;padding:16px;border-radius:8px;overflow-x:auto;'>";
+    echo htmlspecialchars(substr($log ?: "File log frontend belum ada / kosong", -1500));
+    echo "</pre>";
+    echo "<h3>Backend Go Log (/home/pitiagic/trgmix.online/backend.log):</h3>";
+    echo "<pre style='background:#0f172a;color:#f8fafc;padding:16px;border-radius:8px;overflow-x:auto;'>";
+    echo htmlspecialchars(substr($blog ?: "File log backend belum ada / kosong", -1000));
+    echo "</pre>";
+    echo "</div>";
     exit;
 }
 
@@ -75,9 +92,7 @@ $hsize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
 http_response_code(curl_getinfo($ch, CURLINFO_HTTP_CODE));
 
 foreach (explode("\r\n", substr($res, 0, $hsize)) as $h) {
-    if (!empty($h) && !preg_match('/^(Transfer-Encoding|Content-Length):/i', $h)) {
-        header($h);
-    }
+    if (!empty($h) && !preg_match('/^(Transfer-Encoding|Content-Length):/i', $h)) header($h);
 }
 
 echo substr($res, $hsize);
