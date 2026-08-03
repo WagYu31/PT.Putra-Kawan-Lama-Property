@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "🚀 Starting Deployment with Static HTML Export & Go Backend..."
+echo "🚀 Starting Deployment with Real Production Database & Midtrans Gateway..."
 
 # 1. Pull latest code
 cd ~/trgmix.online && git pull origin main
@@ -8,11 +8,10 @@ cd ~/trgmix.online && git pull origin main
 pkill -9 -u $(whoami) -f "node|go|pkwl|main" 2>/dev/null || true
 sleep 2
 
-# 3. Ensure .env exists and MIDTRANS_IS_PRODUCTION is set to true for Production keys
-if [ -f ~/trgmix.online/.env ]; then
-    sed -i 's/MIDTRANS_IS_PRODUCTION=false/MIDTRANS_IS_PRODUCTION=true/g' ~/trgmix.online/.env 2>/dev/null || true
-    cp ~/trgmix.online/.env ~/trgmix.online/backend/.env 2>/dev/null || true
-fi
+# 3. Restore Real Production Database & Midtrans Configuration (.env)
+echo "REJfSE9TVD1hcnphbm8tZGIuaWQucmFwaWRwbGV4LmNvbQpEQl9QT1JUPTMzMDYKREJfVVNFUj1waXRpYWdpY19wa3dsCkRCX1BBU1NXT1JEPVdhZ3l1MzEwNTIwMDIuCkRCX05BTUU9cGl0aWFnaWNfcGt3bApKV1RfU0VDUkVUPXBrd2wtand0LXN1cGVyLXNlY3JldC1rZXktMjAyNApHSU5fTU9ERT1yZWxlYXNlCk1JRFRSQU5TX1NFUlZFUl9LRVk9TWlkLXNlcnZlci1LQWJyaG8yM3dvdklWQ2hwLWhHalV2SWIKTUlEVFJBTlNfQ0xJRU5UX0tFWT1NaWQtY2xpZW50LW1HQTd2MDRjWHJ1eDNLTkYKTUlEVFJBTlNfSVNfUFJPRFVDVElPTj10cnVl" | base64 -d > ~/trgmix.online/.env
+
+cp ~/trgmix.online/.env ~/trgmix.online/backend/.env 2>/dev/null || true
 
 # 4. Extract Static HTML/CSS/JS export directly into ~/trgmix.online/
 cd ~/trgmix.online
