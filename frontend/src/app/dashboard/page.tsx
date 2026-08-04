@@ -454,6 +454,55 @@ function PropertyManager() {
     const [form, setForm] = useState({ ...emptyForm });
     const [saving, setSaving] = useState(false);
     const [facInput, setFacInput] = useState('');
+    const [uploadingImg, setUploadingImg] = useState(false);
+    const [showRawImages, setShowRawImages] = useState(false);
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || e.target.files.length === 0) return;
+        setUploadingImg(true);
+        const formData = new FormData();
+        for (let i = 0; i < e.target.files.length; i++) {
+            formData.append('files', e.target.files[i]);
+        }
+        try {
+            const res = await fetch(`${API_URL}/api/upload/multiple`, {
+                method: 'POST',
+                headers: token ? { Authorization: `Bearer ${token}` } : {},
+                body: formData,
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.urls && data.urls.length > 0) {
+                    setForm(prev => ({
+                        ...prev,
+                        images: [...prev.images, ...data.urls],
+                    }));
+                }
+            }
+        } catch (err) {
+            console.error('Upload failed', err);
+        } finally {
+            setUploadingImg(false);
+            e.target.value = '';
+        }
+    };
+
+    const removeImage = (index: number) => {
+        setForm(prev => ({
+            ...prev,
+            images: prev.images.filter((_, i) => i !== index),
+        }));
+    };
+
+    const moveImage = (index: number, direction: 'up' | 'down') => {
+        const newImgs = [...form.images];
+        const targetIndex = direction === 'up' ? index - 1 : index + 1;
+        if (targetIndex < 0 || targetIndex >= newImgs.length) return;
+        const temp = newImgs[index];
+        newImgs[index] = newImgs[targetIndex];
+        newImgs[targetIndex] = temp;
+        setForm(prev => ({ ...prev, images: newImgs }));
+    };
 
     const fetchProps = async () => {
         try {
@@ -846,14 +895,93 @@ function PropertyManager() {
 
                             {/* Section: Media */}
                             <div className={styles.formSection}>
-                                <h3>🖼️ Media</h3>
-                                <div className={styles.formGrid}>
-                                    <div className={styles.formGroup} style={{ gridColumn: '1/-1' }}>
-                                        <label>URL Gambar (satu per baris)</label>
-                                        <textarea value={form.images.join('\n')} onChange={e => setField('images', e.target.value.split('\n').filter(Boolean))} rows={3} placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg" />
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                                    <h3 style={{ margin: 0 }}>🖼️ Media & Galeri Foto Properti</h3>
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setShowRawImages(!showRawImages)} 
+                                        style={{ fontSize: '0.75rem', background: 'none', border: 'none', color: 'var(--gold-primary)', cursor: 'pointer', textDecoration: 'underline' }}>
+                                        {showRawImages ? '📷 Tampilkan Galeri Visual' : '📄 Edit Kode URL Manual'}
+                                    </button>
+                                </div>
+
+                                {!showRawImages ? (
+                                    <div>
+                                        {/* Photo Gallery Grid */}
+                                        {form.images.length > 0 ? (
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 12, marginBottom: 16 }}>
+                                                {form.images.map((imgUrl, idx) => {
+                                                    const fullSrc = imgUrl.startsWith('/') ? `${API_URL}${imgUrl}` : imgUrl;
+                                                    return (
+                                                        <div key={idx} style={{
+                                                            position: 'relative', borderRadius: 10, overflow: 'hidden',
+                                                            border: '1px solid var(--border-color)', background: '#111',
+                                                            aspectRatio: '4/3', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                                        }}>
+                                                            <img src={fullSrc} alt={`Property ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
+                                                            
+                                                            {/* Index Badge */}
+                                                            <span style={{
+                                                                position: 'absolute', top: 4, left: 4, background: idx === 0 ? 'var(--gold-primary)' : 'rgba(0,0,0,0.7)',
+                                                                color: idx === 0 ? '#000' : '#fff', fontSize: '0.65rem', fontWeight: 700, padding: '2px 6px', borderRadius: 4
+                                                            }}>
+                                                                {idx === 0 ? '⭐ UTAMA' : `#${idx + 1}`}
+                                                            </span>
+
+                                                            {/* Action Overlay */}
+                                                            <div style={{ position: 'absolute', bottom: 4, right: 4, display: 'flex', gap: 4 }}>
+                                                                {idx > 0 && (
+                                                                    <button type="button" onClick={() => moveImage(idx, 'up')} style={{ background: 'rgba(0,0,0,0.7)', color: '#fff', border: 'none', borderRadius: 4, padding: '2px 6px', fontSize: '0.7rem', cursor: 'pointer' }} title="Geser ke Kiri">⬅️</button>
+                                                                )}
+                                                                {idx < form.images.length - 1 && (
+                                                                    <button type="button" onClick={() => moveImage(idx, 'down')} style={{ background: 'rgba(0,0,0,0.7)', color: '#fff', border: 'none', borderRadius: 4, padding: '2px 6px', fontSize: '0.7rem', cursor: 'pointer' }} title="Geser ke Kanan">➡️</button>
+                                                                )}
+                                                                <button type="button" onClick={() => removeImage(idx)} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 4, padding: '2px 6px', fontSize: '0.7rem', cursor: 'pointer' }} title="Hapus Foto">🗑️</button>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        ) : (
+                                            <div style={{ textAlign: 'center', padding: '20px 10px', background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: '1px dashed var(--border-color)', marginBottom: 16, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                                                📷 Belum ada foto properti. Silakan upload foto baru di bawah ini.
+                                            </div>
+                                        )}
+
+                                        {/* Upload Controls */}
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
+                                            <label style={{
+                                                display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px',
+                                                background: 'linear-gradient(135deg, var(--gold-primary), #b3913b)', color: '#000',
+                                                borderRadius: 10, fontWeight: 700, fontSize: '0.85rem', cursor: uploadingImg ? 'wait' : 'pointer',
+                                                boxShadow: '0 4px 12px rgba(201,168,76,0.25)', opacity: uploadingImg ? 0.7 : 1
+                                            }}>
+                                                <span>{uploadingImg ? '⏳ Mengunggah...' : '📷 Upload Foto Baru'}</span>
+                                                <input type="file" accept="image/*" multiple onChange={handleFileUpload} disabled={uploadingImg} style={{ display: 'none' }} />
+                                            </label>
+
+                                            <div style={{ flex: 1, minWidth: 220, display: 'flex', gap: 6 }}>
+                                                <input id="custom-img-url-input" placeholder="Atau paste URL gambar di sini..." style={{ flex: 1, fontSize: '0.8rem', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-color)', background: 'var(--bg-card)' }} />
+                                                <button type="button" onClick={() => {
+                                                    const el = document.getElementById('custom-img-url-input') as HTMLInputElement;
+                                                    if (el && el.value.trim()) {
+                                                        setForm(prev => ({ ...prev, images: [...prev.images, el.value.trim()] }));
+                                                        el.value = '';
+                                                    }
+                                                }} className="btn btn-ghost btn-sm">+ Tambah</button>
+                                            </div>
+                                        </div>
                                     </div>
+                                ) : (
+                                    <div className={styles.formGroup} style={{ gridColumn: '1/-1' }}>
+                                        <label>URL Gambar (Satu per baris)</label>
+                                        <textarea value={form.images.join('\n')} onChange={e => setField('images', e.target.value.split('\n').filter(Boolean))} rows={4} placeholder="/uploads/image1.jpg&#10;/uploads/image2.jpg" />
+                                    </div>
+                                )}
+
+                                <div className={styles.formGrid} style={{ marginTop: 16 }}>
                                     <div className={styles.formGroup}>
-                                        <label>URL Video</label>
+                                        <label>URL Video (YouTube)</label>
                                         <input value={form.video_url} onChange={e => setField('video_url', e.target.value)} placeholder="https://youtube.com/..." />
                                     </div>
                                     <div className={styles.formGroup}>
