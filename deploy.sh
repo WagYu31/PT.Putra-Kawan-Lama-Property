@@ -1,17 +1,17 @@
 #!/bin/bash
 echo "🚀 Starting Deployment with Self-Healing Go Backend Gateway..."
 
-# 1. Clean working directory & pull latest code
+# 1. Kill any old background processes first to free NPROC slots
+pkill -9 -u $(whoami) -f "node|go|pkwl|main" 2>/dev/null || true
+sleep 1
+
+# 2. Clean working directory & pull latest code
 cd ~/trgmix.online
 git reset --hard HEAD 2>/dev/null || true
 git clean -fd 2>/dev/null || true
 git pull origin main 2>/dev/null || true
 
-# 2. Kill any old background processes
-pkill -9 -u $(whoami) -f "node|go|pkwl|main" 2>/dev/null || true
-sleep 2
-
-# 3. Ensure .env exists and MIDTRANS_IS_PRODUCTION is set to true
+# 3. Ensure .env exists and MIDTRANS_IS_PRODUCTION is set to false
 if [ -f ~/trgmix.online/.env ]; then
     sed -i 's/MIDTRANS_IS_PRODUCTION=true/MIDTRANS_IS_PRODUCTION=false/g' ~/trgmix.online/.env 2>/dev/null || true
     cp ~/trgmix.online/.env ~/trgmix.online/backend/.env 2>/dev/null || true
@@ -19,11 +19,11 @@ fi
 
 # 4. Extract Static HTML/CSS/JS export directly into ~/trgmix.online/
 cd ~/trgmix.online
-tar xzf frontend/deploy/out.tar.gz 2>/dev/null || true
+tar xzf frontend/deploy/out.tar.gz 2>/dev/null || python3 -m tarfile -e frontend/deploy/out.tar.gz . 2>/dev/null || true
 
 # 5. Start Go Backend on Port 9095 (Single-thread mode for cPanel safety)
 cd ~/trgmix.online/backend
-tar xzf deploy/backend_linux.tar.gz 2>/dev/null || true
+tar xzf deploy/backend_linux.tar.gz 2>/dev/null || python3 -m tarfile -e deploy/backend_linux.tar.gz . 2>/dev/null || true
 chmod +x pkwl-backend-linux
 
 export GOMAXPROCS=1
