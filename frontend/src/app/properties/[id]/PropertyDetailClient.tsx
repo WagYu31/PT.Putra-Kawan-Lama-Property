@@ -246,6 +246,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
     const calcDP = (price: number) => Math.round(price * dpPercent);
     const calcMonthly = (price: number, months: number) => Math.round((price - calcDP(price)) / months);
     const [rentPeriod, setRentPeriod] = useState<'daily' | 'monthly' | 'yearly'>('monthly');
+    const [rentMode, setRentMode] = useState<'survey' | 'direct'>('survey');
     const [rentStart, setRentStart] = useState('');
     const [rentDuration, setRentDuration] = useState(1);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -932,68 +933,144 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                                         </div>
                                     </div>
 
-                                    {/* Period Selection */}
-                                    <p className={styles.formLabel}>Periode Sewa</p>
-                                    <div className={styles.periodOptions}>
-                                        <button className={`${styles.periodOption} ${rentPeriod === 'daily' ? styles.periodActive : ''}`} onClick={() => { setRentPeriod('daily'); setRentDuration(1); }}>
-                                            <strong>Harian</strong>
-                                            <p>{formatPrice(Math.round(property.price / 30))}/hari</p>
+                                    {/* Mode selector: Survey Lokasi vs Sewa Langsung */}
+                                    <div style={{ display: 'flex', gap: 6, marginBottom: 16, background: 'rgba(255,255,255,0.03)', padding: 4, borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)' }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => setRentMode('survey')}
+                                            style={{
+                                                flex: 1, padding: '8px 10px', borderRadius: 8, border: 'none',
+                                                background: rentMode === 'survey' ? 'var(--gold-gradient)' : 'transparent',
+                                                color: rentMode === 'survey' ? '#0a0f1d' : 'var(--text-secondary)',
+                                                fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', transition: 'all 0.2s',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4
+                                            }}>
+                                            📅 Jadwalkan Survey
                                         </button>
-                                        <button className={`${styles.periodOption} ${rentPeriod === 'monthly' ? styles.periodActive : ''}`} onClick={() => { setRentPeriod('monthly'); setRentDuration(1); }}>
-                                            <strong>Bulanan</strong>
-                                            <p>{formatPrice(property.price)}/bln</p>
-                                        </button>
-                                        <button className={`${styles.periodOption} ${rentPeriod === 'yearly' ? styles.periodActive : ''}`} onClick={() => { setRentPeriod('yearly'); setRentDuration(1); }}>
-                                            <strong>Tahunan</strong>
-                                            <p>{formatPrice(Math.round(property.price * 12 * 0.9))}/thn</p>
+                                        <button
+                                            type="button"
+                                            onClick={() => setRentMode('direct')}
+                                            style={{
+                                                flex: 1, padding: '8px 10px', borderRadius: 8, border: 'none',
+                                                background: rentMode === 'direct' ? 'var(--gold-gradient)' : 'transparent',
+                                                color: rentMode === 'direct' ? '#0a0f1d' : 'var(--text-secondary)',
+                                                fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', transition: 'all 0.2s',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4
+                                            }}>
+                                            ⚡ Sewa Langsung
                                         </button>
                                     </div>
 
-                                    <div className={styles.formRow}>
-                                        <div className={styles.formGroup}>
-                                            <label>📅 Mulai</label>
-                                            <input type="date" className={styles.formInput} min={new Date().toISOString().split('T')[0]} value={rentStart} onChange={(e) => setRentStart(e.target.value)} />
-                                        </div>
-                                        <div className={styles.formGroup}>
-                                            <label>⏱️ Durasi</label>
-                                            <select className={styles.formInput} value={rentDuration} onChange={(e) => setRentDuration(Number(e.target.value))}>
-                                                {durationOptions.map(d => (
-                                                    <option key={d} value={d}>{d} {periodLabel[rentPeriod]}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    {/* Pricing Summary */}
-                                    <div className={styles.priceSummary}>
-                                        <div className={styles.priceLineItem}>
-                                            <span>Harga per {periodLabel[rentPeriod]}</span>
-                                            <strong>{formatPrice(rentPrice)}</strong>
-                                        </div>
-                                        <div className={styles.priceLineItem}>
-                                            <span>Durasi</span>
-                                            <strong>{rentDuration} {periodLabel[rentPeriod]}</strong>
-                                        </div>
-                                        {rentPeriod === 'yearly' && (
-                                            <div className={styles.priceLineItem}>
-                                                <span>Diskon tahunan</span>
-                                                <strong style={{ color: '#4caf50' }}>-10%</strong>
+                                    {/* Mode 1: Survey Lokasi */}
+                                    {rentMode === 'survey' && (
+                                        <>
+                                            <div className={styles.formGroup}>
+                                                <label>📅 Tanggal Survey</label>
+                                                <input
+                                                    type="date"
+                                                    className={styles.formInput}
+                                                    min={new Date().toISOString().split('T')[0]}
+                                                    value={surveyDate}
+                                                    onChange={(e) => setSurveyDate(e.target.value)}
+                                                    style={surveyDate && isDateBooked(surveyDate) ? { borderColor: '#ef4444', boxShadow: '0 0 0 2px rgba(239,68,68,0.2)' } : {}}
+                                                />
+                                                {surveyDate && isDateBooked(surveyDate) && (
+                                                    <p style={{ color: '#ef4444', fontSize: '0.85rem', marginTop: 6 }}>
+                                                        ❌ Tanggal ini sudah di-booking. Silakan pilih tanggal lain.
+                                                    </p>
+                                                )}
+                                                {bookedDates.length > 0 && (
+                                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: 4 }}>
+                                                        ⚠️ {bookedDates.length} tanggal sudah terisi untuk properti ini
+                                                    </p>
+                                                )}
                                             </div>
-                                        )}
-                                        <div className={`${styles.priceLineItem} ${styles.priceTotal}`}>
-                                            <span>Total</span>
-                                            <strong>{formatPrice(rentTotal)}</strong>
-                                        </div>
-                                    </div>
+                                            <div className={styles.formGroup}>
+                                                <label>🕐 Jam Survey</label>
+                                                <input
+                                                    type="time"
+                                                    className={styles.formInput}
+                                                    value={surveyTime}
+                                                    onChange={(e) => setSurveyTime(e.target.value)}
+                                                />
+                                            </div>
+                                            <div className={styles.formGroup}>
+                                                <label>📝 Catatan (opsional)</label>
+                                                <textarea className={styles.formTextarea} placeholder="Tulis catatan untuk jadwal survey sewa..." rows={3} value={surveyNote} onChange={(e) => setSurveyNote(e.target.value)}></textarea>
+                                            </div>
+                                            <button className={styles.btnPrimary} onClick={openSurveyModal} disabled={isProcessing || (!!surveyDate && isDateBooked(surveyDate))}>
+                                                {isProcessing ? '⏳ Memproses...' : '📋 Jadwalkan Survey'}
+                                            </button>
+                                        </>
+                                    )}
 
-                                    <button className={styles.btnPrimary} onClick={handleRentalPayment} disabled={isProcessing || !rentStart}>
-                                        {isProcessing ? '⏳ Memproses...' : `🔑 Sewa ${rentDuration} ${periodLabel[rentPeriod]}`}
-                                    </button>
+                                    {/* Mode 2: Sewa Langsung */}
+                                    {rentMode === 'direct' && (
+                                        <>
+                                            {/* Period Selection */}
+                                            <p className={styles.formLabel}>Periode Sewa</p>
+                                            <div className={styles.periodOptions}>
+                                                <button className={`${styles.periodOption} ${rentPeriod === 'daily' ? styles.periodActive : ''}`} onClick={() => { setRentPeriod('daily'); setRentDuration(1); }}>
+                                                    <strong>Harian</strong>
+                                                    <p>{formatPrice(Math.round(property.price / 30))}/hari</p>
+                                                </button>
+                                                <button className={`${styles.periodOption} ${rentPeriod === 'monthly' ? styles.periodActive : ''}`} onClick={() => { setRentPeriod('monthly'); setRentDuration(1); }}>
+                                                    <strong>Bulanan</strong>
+                                                    <p>{formatPrice(property.price)}/bln</p>
+                                                </button>
+                                                <button className={`${styles.periodOption} ${rentPeriod === 'yearly' ? styles.periodActive : ''}`} onClick={() => { setRentPeriod('yearly'); setRentDuration(1); }}>
+                                                    <strong>Tahunan</strong>
+                                                    <p>{formatPrice(Math.round(property.price * 12 * 0.9))}/thn</p>
+                                                </button>
+                                            </div>
 
-                                    {rentPeriod !== 'daily' && (
-                                        <div className={styles.rentalNote}>
-                                            <p>⚠️ Untuk sewa <strong>{rentPeriod === 'monthly' ? 'bulanan' : 'tahunan'}</strong>, keterlambatan pembayaran dikenakan denda 2%/hari (maks 20%).</p>
-                                        </div>
+                                            <div className={styles.formRow}>
+                                                <div className={styles.formGroup}>
+                                                    <label>📅 Mulai</label>
+                                                    <input type="date" className={styles.formInput} min={new Date().toISOString().split('T')[0]} value={rentStart} onChange={(e) => setRentStart(e.target.value)} />
+                                                </div>
+                                                <div className={styles.formGroup}>
+                                                    <label>⏱️ Durasi</label>
+                                                    <select className={styles.formInput} value={rentDuration} onChange={(e) => setRentDuration(Number(e.target.value))}>
+                                                        {durationOptions.map(d => (
+                                                            <option key={d} value={d}>{d} {periodLabel[rentPeriod]}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            {/* Pricing Summary */}
+                                            <div className={styles.priceSummary}>
+                                                <div className={styles.priceLineItem}>
+                                                    <span>Harga per {periodLabel[rentPeriod]}</span>
+                                                    <strong>{formatPrice(rentPrice)}</strong>
+                                                </div>
+                                                <div className={styles.priceLineItem}>
+                                                    <span>Durasi</span>
+                                                    <strong>{rentDuration} {periodLabel[rentPeriod]}</strong>
+                                                </div>
+                                                {rentPeriod === 'yearly' && (
+                                                    <div className={styles.priceLineItem}>
+                                                        <span>Diskon tahunan</span>
+                                                        <strong style={{ color: '#4caf50' }}>-10%</strong>
+                                                    </div>
+                                                )}
+                                                <div className={`${styles.priceLineItem} ${styles.priceTotal}`}>
+                                                    <span>Total</span>
+                                                    <strong>{formatPrice(rentTotal)}</strong>
+                                                </div>
+                                            </div>
+
+                                            <button className={styles.btnPrimary} onClick={handleRentalPayment} disabled={isProcessing || !rentStart}>
+                                                {isProcessing ? '⏳ Memproses...' : `🔑 Sewa ${rentDuration} ${periodLabel[rentPeriod]}`}
+                                            </button>
+
+                                            {rentPeriod !== 'daily' && (
+                                                <div className={styles.rentalNote}>
+                                                    <p>⚠️ Untuk sewa <strong>{rentPeriod === 'monthly' ? 'bulanan' : 'tahunan'}</strong>, keterlambatan pembayaran dikenakan denda 2%/hari (maks 20%).</p>
+                                                </div>
+                                            )}
+                                        </>
                                     )}
                                 </div>
                             )}
