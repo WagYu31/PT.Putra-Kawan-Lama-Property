@@ -177,25 +177,25 @@ function DashboardContent() {
                             {/* Stats Cards */}
                             <div className={styles.overviewGrid}>
                                 {(user.role === 'admin' ? [
-                                    { label: 'Total Properti', value: String(overviewStats.properties), icon: '🏠', color: '#c9a84c', bg: 'rgba(201,168,76,0.12)', border: 'rgba(201,168,76,0.3)' },
-                                    { label: 'Total Users', value: String(overviewStats.users), icon: '👥', color: '#3b82f6', bg: 'rgba(59,130,246,0.12)', border: 'rgba(59,130,246,0.3)' },
-                                    { label: 'Booking Pending', value: String(overviewStats.pendingBookings), icon: '⏳', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.3)' },
-                                    { label: 'Total Booking', value: String(overviewStats.bookings), icon: '📋', color: '#10b981', bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.3)' },
+                                    { label: 'Total Properti', value: String(overviewStats.properties), icon: '🏠' },
+                                    { label: 'Total Users', value: String(overviewStats.users), icon: '👥' },
+                                    { label: 'Booking Pending', value: String(overviewStats.pendingBookings), icon: '📋' },
+                                    { label: 'Total Booking', value: String(overviewStats.bookings), icon: '💬' },
                                 ] : user.role === 'owner' ? [
-                                    { label: 'Properti Saya', value: String(overviewStats.properties), icon: '🏠', color: '#c9a84c', bg: 'rgba(201,168,76,0.12)', border: 'rgba(201,168,76,0.3)' },
-                                    { label: 'Booking Masuk', value: String(overviewStats.bookings), icon: '📋', color: '#3b82f6', bg: 'rgba(59,130,246,0.12)', border: 'rgba(59,130,246,0.3)' },
-                                    { label: 'Total Properti', value: String(overviewStats.properties), icon: '👁️', color: '#10b981', bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.3)' },
-                                    { label: 'Booking Pending', value: String(overviewStats.pendingBookings), icon: '⏳', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.3)' },
+                                    { label: 'Properti Saya', value: String(overviewStats.properties), icon: '🏠' },
+                                    { label: 'Booking Masuk', value: String(overviewStats.bookings), icon: '📋' },
+                                    { label: 'Total Properti', value: String(overviewStats.properties), icon: '👁️' },
+                                    { label: 'Booking Pending', value: String(overviewStats.pendingBookings), icon: '⏳' },
                                 ] : [
-                                    { label: 'Booking Saya', value: String(overviewStats.bookings), icon: '📋', color: '#3b82f6', bg: 'rgba(59,130,246,0.12)', border: 'rgba(59,130,246,0.3)' },
-                                    { label: 'Favorit Saya', value: String(overviewStats.favorites), icon: '❤️', color: '#ef4444', bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.3)' },
-                                    { label: 'Properti Tersedia', value: String(overviewStats.propertiesViewed), icon: '🏡', color: '#10b981', bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.3)' },
-                                    { label: 'Pesan Terkirim', value: String(overviewStats.messagesSent), icon: '💬', color: '#c9a84c', bg: 'rgba(201,168,76,0.12)', border: 'rgba(201,168,76,0.3)' },
+                                    { label: 'Booking Saya', value: String(overviewStats.bookings), icon: '📋' },
+                                    { label: 'Favorit Saya', value: String(overviewStats.favorites), icon: '❤️' },
+                                    { label: 'Properti Tersedia', value: String(overviewStats.propertiesViewed), icon: '🏡' },
+                                    { label: 'Pesan Terkirim', value: String(overviewStats.messagesSent), icon: '💬' },
                                 ]).map((s, i) => (
-                                    <div key={i} className={styles.statCard} style={{ borderTop: `3px solid ${s.color}` }}>
-                                        <div className={styles.statIcon} style={{ background: s.bg, border: `1px solid ${s.border}` }}>{s.icon}</div>
+                                    <div key={i} className={styles.statCard}>
+                                        <div className={styles.statIcon}>{s.icon}</div>
                                         <div className={styles.statContent}>
-                                            <p className={styles.statValue} style={{ color: s.color }}>{s.value}</p>
+                                            <p className={styles.statValue}>{s.value}</p>
                                             <p className={styles.statLabel}>{s.label}</p>
                                         </div>
                                     </div>
