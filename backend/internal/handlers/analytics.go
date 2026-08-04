@@ -95,10 +95,10 @@ func (h *AnalyticsHandler) Stats(c *gin.Context) {
 	var hourlyRaw []HourlyStat
 	twentyFourHoursAgo := now.Add(-24 * time.Hour)
 	h.DB.Model(&models.PageView{}).
-		Select("EXTRACT(HOUR FROM created_at)::int as hour, count(distinct session_id) as count").
+		Select("EXTRACT(HOUR FROM created_at)::int as hour, count(*) as count").
 		Where("created_at >= ?", twentyFourHoursAgo).
-		Group("hour").
-		Order("hour").
+		Group("EXTRACT(HOUR FROM created_at)").
+		Order("EXTRACT(HOUR FROM created_at)").
 		Find(&hourlyRaw)
 
 	// Fill all 24 hours

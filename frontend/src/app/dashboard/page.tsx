@@ -2867,18 +2867,15 @@ function AnalyticsWidget() {
                             <path d={areaPath} fill="url(#areaFill)" />
 
                             {/* Line */}
-                            <path d={linePath} fill="none" stroke="#4285f4" strokeWidth="2" strokeLinejoin="round" />
+                            <path d={linePath} fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
 
                             {/* Data dots + tooltips */}
                             {points.map((p, i) => (
-                                <g key={i}>
-                                    {p.count > 0 && (
-                                        <>
-                                            <circle cx={p.x} cy={p.y} r={p.hour === nowHour ? 5 : 3}
-                                                fill={p.hour === nowHour ? '#c9a84c' : '#4285f4'} stroke="var(--bg-card)" strokeWidth="1.5" />
-                                            <title>{`${String(p.hour).padStart(2, '0')}:00 — ${p.count} pengunjung`}</title>
-                                        </>
-                                    )}
+                                <g key={i} className="chart-point" style={{ cursor: 'pointer' }}>
+                                    <circle cx={p.x} cy={p.y} r={p.hour === nowHour ? 5 : (p.count > 0 ? 3.5 : 2)}
+                                        fill={p.hour === nowHour ? '#c9a84c' : (p.count > 0 ? '#3b82f6' : 'rgba(255,255,255,0.2)')} 
+                                        stroke="var(--bg-card)" strokeWidth="1.5" />
+                                    <title>{`${String(p.hour).padStart(2, '0')}:00 — ${p.count} Pengunjung / View`}</title>
                                 </g>
                             ))}
 
