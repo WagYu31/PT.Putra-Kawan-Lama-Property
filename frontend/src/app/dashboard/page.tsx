@@ -421,6 +421,7 @@ interface Property {
     year_built: number; certificate: string; images: string[];
     video_url: string; virtual_tour: string; facilities: string[];
     featured: boolean;
+    owner?: { id: number; name: string; email: string; phone: string };
 }
 
 const emptyForm = {
@@ -598,14 +599,24 @@ function PropertyManager() {
                     <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                         <table className={styles.table}>
                             <thead>
-                                <tr><th>Properti</th><th>Tipe</th><th>Harga</th><th>Status</th><th>Views</th><th>Aksi</th></tr>
+                                <tr><th>Properti</th><th>Pemilik</th><th>Tipe</th><th>Harga</th><th>Status</th><th>Views</th><th>Aksi</th></tr>
                             </thead>
                             <tbody>
                                 {properties.length === 0 ? (
-                                    <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Belum ada properti. Klik &quot;+ Tambah Properti&quot; untuk menambahkan.</td></tr>
+                                    <tr><td colSpan={7} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Belum ada properti. Klik &quot;+ Tambah Properti&quot; untuk menambahkan.</td></tr>
                                 ) : properties.map(p => (
                                     <tr key={p.id}>
                                         <td>{p.title}</td>
+                                        <td style={{ fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
+                                            {p.owner?.name ? (
+                                                <div>
+                                                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>👤 {p.owner.name}</span>
+                                                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{p.owner.email}</div>
+                                                </div>
+                                            ) : (
+                                                <span style={{ color: 'var(--text-muted)' }}>-</span>
+                                            )}
+                                        </td>
                                         <td><span className={`badge ${typeBadge[p.type] || 'badge-gold'}`}>{typeLabel[p.type] || p.type}</span></td>
                                         <td style={{ whiteSpace: 'nowrap' }}>{fmtPrice(p.price)}{p.type === 'rent' ? '/bln' : ''}</td>
                                         <td>
