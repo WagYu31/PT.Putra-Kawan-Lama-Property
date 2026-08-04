@@ -188,7 +188,7 @@ function DashboardContent() {
                                     { label: 'Booking Pending', value: String(overviewStats.pendingBookings), icon: '💰', color: '#f59e0b' },
                                 ] : [
                                     { label: 'Booking Saya', value: String(overviewStats.bookings), icon: '📋', color: '#3b82f6' },
-                                    { label: 'Favorit', value: String(overviewStats.favorites), icon: '❤️', color: '#ef4444' },
+                                    { label: 'Favorit Saya', value: String(overviewStats.favorites), icon: '❤️', color: '#ef4444' },
                                     { label: 'Properti Tersedia', value: String(overviewStats.propertiesViewed), icon: '👁', color: '#10b981' },
                                     { label: 'Pesan Terkirim', value: String(overviewStats.messagesSent), icon: '💬', color: '#c9a84c' },
                                 ]).map((s, i) => (
@@ -205,37 +205,76 @@ function DashboardContent() {
                             {/* Two Column Layout */}
                             <div className={styles.overviewColumns}>
                                 {/* Recent Bookings */}
-                                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1rem', overflow: 'hidden' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', gap: '0.5rem' }}>
-                                        <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>📋 Booking Terbaru</h3>
-                                        <button onClick={() => setActiveTab('bookings')} style={{ background: 'none', border: 'none', color: 'var(--gold-primary)', cursor: 'pointer', fontSize: '0.8rem', whiteSpace: 'nowrap', flexShrink: 0 }}>Lihat Semua →</button>
+                                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.25rem', overflow: 'hidden' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', gap: '0.5rem' }}>
+                                        <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                            📋 Booking Terbaru
+                                        </h3>
+                                        <button onClick={() => setActiveTab('bookings')} style={{ background: 'none', border: 'none', color: 'var(--gold-primary)', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0 }}>Lihat Semua →</button>
                                     </div>
                                     {recentBookings.length > 0 ? (
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                            {recentBookings.map((b: { id: number; booking_type: string; status: string; property?: { title: string }; created_at: string; total_price?: number; payment_method?: string }) => (
-                                                <div key={b.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.65rem 0.75rem', background: 'var(--bg-tertiary)', borderRadius: '10px', border: '1px solid var(--border-color)', gap: '0.5rem', overflow: 'hidden' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0, overflow: 'hidden' }}>
-                                                        <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{b.booking_type === 'survey' ? '🔍' : b.booking_type === 'purchase' ? '🏠' : '📝'}</span>
-                                                        <div style={{ minWidth: 0, overflow: 'hidden' }}>
-                                                            <p style={{ fontWeight: 500, color: 'var(--text-primary)', fontSize: '0.8rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.property?.title || 'Properti'}</p>
-                                                            <p style={{ color: 'var(--text-muted)', fontSize: '0.7rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                                {b.booking_type === 'survey' ? 'Survey' : b.booking_type === 'purchase' ? (b.payment_method === 'installment' ? 'Cicilan' : 'Cash') : 'Sewa'}
-                                                                {' · '}{new Date(b.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
-                                                            </p>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                                            {recentBookings.map((b: any) => {
+                                                const isSurvey = b.booking_type === 'survey';
+                                                const isPurchase = b.booking_type === 'purchase';
+                                                const icon = isSurvey ? '📋' : isPurchase ? '🏷️' : '🔑';
+                                                const typeLabel = isSurvey ? 'Survey Lokasi' : isPurchase ? (b.payment_method === 'installment' ? 'Cicilan' : 'Cash') : 'Sewa';
+
+                                                let detailDate = new Date(b.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+                                                if (isSurvey && b.survey_date) {
+                                                    detailDate = `${new Date(b.survey_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}${b.survey_time ? ' • ' + b.survey_time + ' WIB' : ''}`;
+                                                }
+
+                                                const fmtP = (n?: number) => {
+                                                    if (!n) return '';
+                                                    if (n >= 1e9) return `Rp ${(n / 1e9).toFixed(1)} M`;
+                                                    if (n >= 1e6) return `Rp ${Math.round(n / 1e6)} Juta`;
+                                                    return `Rp ${n.toLocaleString('id-ID')}`;
+                                                };
+
+                                                return (
+                                                    <div key={b.id} style={{
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                                        padding: '0.75rem 1rem', background: 'var(--bg-tertiary)', borderRadius: '12px',
+                                                        border: '1px solid var(--border-color)', gap: '0.75rem', transition: 'all 0.2s',
+                                                        cursor: 'pointer',
+                                                    }}
+                                                    onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.35)')}
+                                                    onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--border-color)')}
+                                                    onClick={() => setActiveTab('bookings')}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0, flex: 1 }}>
+                                                            <div style={{
+                                                                width: 42, height: 42, borderRadius: 10,
+                                                                background: isSurvey ? 'rgba(59,130,246,0.12)' : isPurchase ? 'rgba(201,168,76,0.12)' : 'rgba(16,185,129,0.12)',
+                                                                color: isSurvey ? '#3b82f6' : isPurchase ? '#c9a84c' : '#10b981',
+                                                                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', flexShrink: 0
+                                                            }}>
+                                                                {icon}
+                                                            </div>
+                                                            <div style={{ minWidth: 0, flex: 1 }}>
+                                                                <p style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.88rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', margin: 0 }}>
+                                                                    {b.property?.title || 'Properti'}
+                                                                </p>
+                                                                <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', margin: '3px 0 0', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                                    <span style={{ fontWeight: 600, color: isSurvey ? '#3b82f6' : isPurchase ? '#c9a84c' : '#10b981' }}>{typeLabel}</span>
+                                                                    <span>•</span>
+                                                                    <span>{detailDate}</span>
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                                            <span style={{
+                                                                padding: '3px 10px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 700,
+                                                                background: b.status === 'completed' ? 'rgba(16,185,129,0.15)' : b.status === 'confirmed' ? 'rgba(59,130,246,0.15)' : b.status === 'cancelled' ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)',
+                                                                color: b.status === 'completed' ? '#10b981' : b.status === 'confirmed' ? '#3b82f6' : b.status === 'cancelled' ? '#ef4444' : '#f59e0b'
+                                                            }}>
+                                                                {b.status === 'completed' ? '✅ Selesai' : b.status === 'confirmed' ? '✅ Dikonfirmasi' : b.status === 'cancelled' ? '❌ Dibatalkan' : '⏳ Pending'}
+                                                            </span>
+                                                            {b.total_price ? <p style={{ color: 'var(--gold-primary)', fontSize: '0.82rem', margin: '4px 0 0', fontWeight: 700 }}>{fmtP(b.total_price)}</p> : null}
                                                         </div>
                                                     </div>
-                                                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                                                        <span style={{
-                                                            padding: '2px 8px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 600,
-                                                            background: b.status === 'completed' ? 'rgba(16,185,129,0.15)' : b.status === 'confirmed' ? 'rgba(59,130,246,0.15)' : b.status === 'cancelled' ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)',
-                                                            color: b.status === 'completed' ? '#10b981' : b.status === 'confirmed' ? '#3b82f6' : b.status === 'cancelled' ? '#ef4444' : '#f59e0b'
-                                                        }}>
-                                                            {b.status === 'completed' ? '✅ Selesai' : b.status === 'confirmed' ? '✅ Dikonfirmasi' : b.status === 'cancelled' ? '❌ Dibatalkan' : '⏳ Pending'}
-                                                        </span>
-                                                        {b.total_price ? <p style={{ color: 'var(--gold-primary)', fontSize: '0.75rem', marginTop: '2px', fontWeight: 600 }}>Rp {(b.total_price / 1e9).toFixed(1)} M</p> : null}
-                                                    </div>
-                                                </div>
-                                            ))}
+                                                );
+                                            })}
                                         </div>
                                     ) : (
                                         <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
@@ -247,40 +286,80 @@ function DashboardContent() {
                                 </div>
 
                                 {/* Quick Actions & Info */}
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                                     {/* Quick Actions */}
-                                    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.5rem' }}>
-                                        <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '1rem' }}>⚡ Aksi Cepat</h3>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                            <button onClick={() => router.push('/properties')} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.15)', borderRadius: '10px', color: 'var(--gold-primary)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, textAlign: 'left' }}>
-                                                🏠 Cari Properti
+                                    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.25rem' }}>
+                                        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                            ⚡ Aksi Cepat
+                                        </h3>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                                            <button onClick={() => router.push('/properties')} style={{
+                                                display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem',
+                                                background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)',
+                                                borderRadius: '12px', color: 'var(--gold-primary)', cursor: 'pointer',
+                                                fontSize: '0.85rem', fontWeight: 600, transition: 'all 0.2s', textAlign: 'left'
+                                            }}
+                                            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(201,168,76,0.15)')}
+                                            onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(201,168,76,0.08)')}>
+                                                <span style={{ fontSize: '1.1rem' }}>🏠</span> Cari Properti Baru
                                             </button>
-                                            <button onClick={() => setActiveTab('bookings')} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.15)', borderRadius: '10px', color: '#3b82f6', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, textAlign: 'left' }}>
-                                                📋 Lihat Booking
+                                            <button onClick={() => setActiveTab('bookings')} style={{
+                                                display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem',
+                                                background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)',
+                                                borderRadius: '12px', color: '#3b82f6', cursor: 'pointer',
+                                                fontSize: '0.85rem', fontWeight: 600, transition: 'all 0.2s', textAlign: 'left'
+                                            }}
+                                            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(59,130,246,0.15)')}
+                                            onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(59,130,246,0.08)')}>
+                                                <span style={{ fontSize: '1.1rem' }}>📋</span> Lihat Semua Booking
                                             </button>
                                             {user.role !== 'customer' && (
-                                                <button onClick={() => setActiveTab('properties')} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)', borderRadius: '10px', color: '#10b981', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, textAlign: 'left' }}>
-                                                    ➕ Kelola Properti
+                                                <button onClick={() => setActiveTab('properties')} style={{
+                                                    display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem',
+                                                    background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)',
+                                                    borderRadius: '12px', color: '#10b981', cursor: 'pointer',
+                                                    fontSize: '0.85rem', fontWeight: 600, transition: 'all 0.2s', textAlign: 'left'
+                                                }}
+                                                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(16,185,129,0.15)')}
+                                                onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(16,185,129,0.08)')}>
+                                                    <span style={{ fontSize: '1.1rem' }}>➕</span> Kelola Properti
                                                 </button>
                                             )}
-                                            <button onClick={() => setActiveTab('payments')} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.15)', borderRadius: '10px', color: '#f59e0b', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, textAlign: 'left' }}>
-                                                💰 Pembayaran
+                                            <button onClick={() => setActiveTab('payments')} style={{
+                                                display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem',
+                                                background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)',
+                                                borderRadius: '12px', color: '#f59e0b', cursor: 'pointer',
+                                                fontSize: '0.85rem', fontWeight: 600, transition: 'all 0.2s', textAlign: 'left'
+                                            }}
+                                            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(245,158,11,0.15)')}
+                                            onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(245,158,11,0.08)')}>
+                                                <span style={{ fontSize: '1.1rem' }}>💳</span> Riwayat & Tagihan Pembayaran
                                             </button>
                                         </div>
                                     </div>
 
                                     {/* Info Card */}
-                                    <div style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.1), rgba(201,168,76,0.03))', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '1.5rem' }}>
-                                        <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--gold-primary)', marginBottom: '0.75rem' }}>💡 Tips</h3>
-                                        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                            <li style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>• Jadwalkan survey terlebih dahulu sebelum membeli</li>
-                                            <li style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>• Cicilan tersedia untuk tenor 3, 6, atau 12 bulan</li>
-                                            <li style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>• Pantau status pembayaran di menu Pembayaran</li>
+                                    <div style={{
+                                        background: 'linear-gradient(135deg, rgba(201,168,76,0.12), rgba(201,168,76,0.03))',
+                                        border: '1px solid rgba(201,168,76,0.2)', borderRadius: '16px', padding: '1.25rem'
+                                    }}>
+                                        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--gold-primary)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                            💡 Tips Transaksi Properti
+                                        </h3>
+                                        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                                            <li style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.5, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                                                <span>•</span> <span>Jadwalkan survey lokasi terlebih dahulu untuk memastikan kondisi fisik properti.</span>
+                                            </li>
+                                            <li style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.5, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                                                <span>•</span> <span>Fasilitas cicilan tersedia untuk tenor 3, 6, atau 12 bulan dengan DP 10%.</span>
+                                            </li>
+                                            <li style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.5, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                                                <span>•</span> <span>Pantau status survey, dokumen & tagihan secara real-time dari dashboard ini.</span>
+                                            </li>
                                         </ul>
                                     </div>
                                 </div>
                             </div>
-
                             {/* Live Analytics Widget (Admin Only) */}
                             {user.role === 'admin' && <AnalyticsWidget />}
                         </div>
