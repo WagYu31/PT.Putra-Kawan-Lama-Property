@@ -424,22 +424,35 @@
 /* ==================== OVERVIEW STATS ==================== */
 .overviewGrid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: 20px;
+}
+
+@media (max-width: 1200px) {
+    .overviewGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 .statCard {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 14px;
-    padding: 24px;
+    border-radius: 16px;
+    padding: 20px 24px;
     display: flex;
     align-items: center;
-    gap: 16px;
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    gap: 18px;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     position: relative;
     overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
     animation: statCardIn 0.5s ease-out both;
+}
+
+:global([data-theme="light"]) .statCard {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
 }
 
 .statCard::after {
@@ -482,40 +495,50 @@
 }
 
 .statCard:hover {
-    border-color: rgba(201, 168, 76, 0.25);
     transform: translateY(-4px);
-    box-shadow: 0 12px 40px rgba(201, 168, 76, 0.08), 0 4px 16px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.08);
 }
 
 .statIcon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.3rem;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     transition: transform 0.3s;
 }
 
 .statCard:hover .statIcon {
-    transform: scale(1.1);
+    transform: scale(1.08);
+}
+
+.statContent {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
 }
 
 .statValue {
     font-family: var(--font-display);
-    font-size: 1.5rem;
-    font-weight: 700;
-    background: linear-gradient(135deg, var(--text-primary), var(--gold-light));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    font-size: 1.8rem;
+    font-weight: 800;
+    line-height: 1.1;
+    margin: 0;
 }
 
 .statLabel {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    margin-top: 2px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-top: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* ==================== TABLES ==================== */
