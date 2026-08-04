@@ -75,31 +75,31 @@ func (h *AnalyticsHandler) Stats(c *gin.Context) {
 
 	// Top 5 pages (last 7 days)
 	type PageStat struct {
-		PagePath string `json:"page_path"`
-		Count    int64  `json:"count"`
+		PagePath string `json:"page_path" gorm:"column:page_path"`
+		Count    int64  `json:"count" gorm:"column:count"`
 	}
 	var topPages []PageStat
-	h.DB.Model(&models.PageView{}).
-		Select("page_path, count(*) as count").
+	h.DB.Table("page_views").
+		Select("page_path, COUNT(*) as count").
 		Where("created_at >= ?", weekStart).
 		Group("page_path").
-		Order("count desc").
+		Order("count DESC").
 		Limit(5).
-		Find(&topPages)
+		Scan(&topPages)
 
 	// Hourly chart (last 24h)
 	type HourlyStat struct {
-		Hour  int   `json:"hour"`
-		Count int64 `json:"count"`
+		Hour  int   `json:"hour" gorm:"column:hour"`
+		Count int64 `json:"count" gorm:"column:count"`
 	}
 	var hourlyRaw []HourlyStat
 	twentyFourHoursAgo := now.Add(-24 * time.Hour)
-	h.DB.Model(&models.PageView{}).
-		Select("EXTRACT(HOUR FROM created_at)::int as hour, count(*) as count").
+	h.DB.Table("page_views").
+		Select("EXTRACT(HOUR FROM created_at)::int as hour, COUNT(*) as count").
 		Where("created_at >= ?", twentyFourHoursAgo).
 		Group("EXTRACT(HOUR FROM created_at)").
 		Order("EXTRACT(HOUR FROM created_at)").
-		Find(&hourlyRaw)
+		Scan(&hourlyRaw)
 
 	// Fill all 24 hours
 	hourlyMap := make(map[int]int64)
