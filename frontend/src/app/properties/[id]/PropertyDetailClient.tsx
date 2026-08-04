@@ -252,6 +252,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
     const [isProcessing, setIsProcessing] = useState(false);
     const [surveySuccess, setSurveySuccess] = useState(false);
     const [bookedDates, setBookedDates] = useState<string[]>([]);
+    const [bookedSlots, setBookedSlots] = useState<{ date: string; time: string }[]>([]);
     const [property, setProperty] = useState<any>(propertyData[id] || null);
     const [loading, setLoading] = useState(!propertyData[id]);
     const [isFavorited, setIsFavorited] = useState(false);
@@ -265,14 +266,20 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
         }).then(r => r.json()).then(d => setIsFavorited(d.is_favorited)).catch(() => { });
     }, [id]);
 
-    // Fetch booked dates for this property
+    // Fetch booked slots for this property
     useEffect(() => {
-        api<{ booked_dates: string[] }>(`/api/properties/${id}/booked-dates`)
-            .then(data => setBookedDates(data.booked_dates || []))
+        api<{ booked_dates?: string[]; booked_slots?: { date: string; time: string }[] }>(`/api/properties/${id}/booked-dates`)
+            .then(data => {
+                setBookedDates(data.booked_dates || []);
+                setBookedSlots(data.booked_slots || []);
+            })
             .catch(() => { });
     }, [id]);
 
-    const isDateBooked = (dateStr: string) => bookedDates.includes(dateStr);
+    const isSlotBooked = (dateStr: string, timeStr: string) => {
+        if (!dateStr || !timeStr) return false;
+        return bookedSlots.some(s => s.date === dateStr && s.time === timeStr);
+    };
 
     /* fallback images per category for API-loaded properties */
     const defaultImages: Record<string, string[]> = {
@@ -370,6 +377,10 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
     const openSurveyModal = () => {
         if (!surveyDate) { alert('Pilih tanggal survey terlebih dahulu!'); return; }
         if (!surveyTime) { alert('Pilih jam survey terlebih dahulu!'); return; }
+        if (isSlotBooked(surveyDate, surveyTime)) {
+            alert(`Jam ${surveyTime} WIB pada tanggal ${surveyDate} sudah di-booking orang lain. Silakan pilih jam lain.`);
+            return;
+        }
         const token = typeof window !== 'undefined' ? localStorage.getItem('pkwl_token') : null;
         if (!token) { alert('Silakan login terlebih dahulu untuk menjadwalkan survey.'); return; }
         setShowSurveyModal(true);
@@ -394,8 +405,9 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
             setSurveySuccess(true);
             setBuyStep(2);
             setShowSurveyModal(false);
-            // Refresh booked dates
-            setBookedDates(prev => [...prev, surveyDate]);
+            // Refresh booked slots
+            setBookedSlots(prev => [...prev, { date: surveyDate, time: surveyTime }]);
+            alert(`✅ Survey lokasi berhasil dijadwalkan!\n\n📅 Tanggal: ${surveyDate}\n🕐 Jam: ${surveyTime} WIB\n\nDetail survey telah disimpan. Tim kami akan menghubungi Anda untuk konfirmasi.`);
         } catch (err: any) {
             alert(err.message || 'Gagal menjadwalkan survey');
         } finally {
@@ -682,33 +694,37 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                                                     min={new Date().toISOString().split('T')[0]}
                                                     value={surveyDate}
                                                     onChange={(e) => setSurveyDate(e.target.value)}
-                                                    style={surveyDate && isDateBooked(surveyDate) ? { borderColor: '#ef4444', boxShadow: '0 0 0 2px rgba(239,68,68,0.2)' } : {}}
                                                 />
-                                                {surveyDate && isDateBooked(surveyDate) && (
-                                                    <p style={{ color: '#ef4444', fontSize: '0.85rem', marginTop: 6 }}>
-                                                        ❌ Tanggal ini sudah di-booking. Silakan pilih tanggal lain.
-                                                    </p>
-                                                )}
-                                                {bookedDates.length > 0 && (
-                                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: 4 }}>
-                                                        ⚠️ {bookedDates.length} tanggal sudah terisi untuk properti ini
-                                                    </p>
-                                                )}
                                             </div>
                                             <div className={styles.formGroup}>
                                                 <label>🕐 Jam Survey</label>
-                                                <input
-                                                    type="time"
+                                                <select
                                                     className={styles.formInput}
                                                     value={surveyTime}
                                                     onChange={(e) => setSurveyTime(e.target.value)}
-                                                />
+                                                    style={surveyDate && surveyTime && isSlotBooked(surveyDate, surveyTime) ? { borderColor: '#ef4444', boxShadow: '0 0 0 2px rgba(239,68,68,0.2)' } : {}}
+                                                >
+                                                    <option value="">Pilih Jam Survey...</option>
+                                                    {["09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00"].map(t => {
+                                                        const isTaken = isSlotBooked(surveyDate, t);
+                                                        return (
+                                                            <option key={t} value={t} disabled={isTaken}>
+                                                                {t} WIB {isTaken ? '(Sudah Terisi ❌)' : ' (Tersedia ✅)'}
+                                                            </option>
+                                                        );
+                                                    })}
+                                                </select>
+                                                {surveyDate && surveyTime && isSlotBooked(surveyDate, surveyTime) && (
+                                                    <p style={{ color: '#ef4444', fontSize: '0.85rem', marginTop: 6 }}>
+                                                        ❌ Jam {surveyTime} WIB pada tanggal ini sudah di-booking. Silakan pilih jam lain.
+                                                    </p>
+                                                )}
                                             </div>
                                             <div className={styles.formGroup}>
                                                 <label>📝 Catatan (opsional)</label>
                                                 <textarea className={styles.formTextarea} placeholder="Tulis catatan untuk jadwal survey..." rows={3} value={surveyNote} onChange={(e) => setSurveyNote(e.target.value)}></textarea>
                                             </div>
-                                            <button className={styles.btnPrimary} onClick={openSurveyModal} disabled={isProcessing || (!!surveyDate && isDateBooked(surveyDate))}>
+                                            <button className={styles.btnPrimary} onClick={handleSurvey} disabled={isProcessing || !surveyDate || !surveyTime || isSlotBooked(surveyDate, surveyTime)}>
                                                 {isProcessing ? '⏳ Memproses...' : '📋 Jadwalkan Survey'}
                                             </button>
                                         </>
@@ -972,33 +988,37 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                                                     min={new Date().toISOString().split('T')[0]}
                                                     value={surveyDate}
                                                     onChange={(e) => setSurveyDate(e.target.value)}
-                                                    style={surveyDate && isDateBooked(surveyDate) ? { borderColor: '#ef4444', boxShadow: '0 0 0 2px rgba(239,68,68,0.2)' } : {}}
                                                 />
-                                                {surveyDate && isDateBooked(surveyDate) && (
-                                                    <p style={{ color: '#ef4444', fontSize: '0.85rem', marginTop: 6 }}>
-                                                        ❌ Tanggal ini sudah di-booking. Silakan pilih tanggal lain.
-                                                    </p>
-                                                )}
-                                                {bookedDates.length > 0 && (
-                                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: 4 }}>
-                                                        ⚠️ {bookedDates.length} tanggal sudah terisi untuk properti ini
-                                                    </p>
-                                                )}
                                             </div>
                                             <div className={styles.formGroup}>
                                                 <label>🕐 Jam Survey</label>
-                                                <input
-                                                    type="time"
+                                                <select
                                                     className={styles.formInput}
                                                     value={surveyTime}
                                                     onChange={(e) => setSurveyTime(e.target.value)}
-                                                />
+                                                    style={surveyDate && surveyTime && isSlotBooked(surveyDate, surveyTime) ? { borderColor: '#ef4444', boxShadow: '0 0 0 2px rgba(239,68,68,0.2)' } : {}}
+                                                >
+                                                    <option value="">Pilih Jam Survey...</option>
+                                                    {["09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00"].map(t => {
+                                                        const isTaken = isSlotBooked(surveyDate, t);
+                                                        return (
+                                                            <option key={t} value={t} disabled={isTaken}>
+                                                                {t} WIB {isTaken ? '(Sudah Terisi ❌)' : ' (Tersedia ✅)'}
+                                                             </option>
+                                                        );
+                                                    })}
+                                                </select>
+                                                {surveyDate && surveyTime && isSlotBooked(surveyDate, surveyTime) && (
+                                                    <p style={{ color: '#ef4444', fontSize: '0.85rem', marginTop: 6 }}>
+                                                        ❌ Jam {surveyTime} WIB pada tanggal ini sudah di-booking. Silakan pilih jam lain.
+                                                    </p>
+                                                )}
                                             </div>
                                             <div className={styles.formGroup}>
                                                 <label>📝 Catatan (opsional)</label>
                                                 <textarea className={styles.formTextarea} placeholder="Tulis catatan untuk jadwal survey sewa..." rows={3} value={surveyNote} onChange={(e) => setSurveyNote(e.target.value)}></textarea>
                                             </div>
-                                            <button className={styles.btnPrimary} onClick={openSurveyModal} disabled={isProcessing || (!!surveyDate && isDateBooked(surveyDate))}>
+                                            <button className={styles.btnPrimary} onClick={openSurveyModal} disabled={isProcessing || !surveyDate || !surveyTime || isSlotBooked(surveyDate, surveyTime)}>
                                                 {isProcessing ? '⏳ Memproses...' : '📋 Jadwalkan Survey'}
                                             </button>
                                         </>
@@ -1078,6 +1098,112 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                     </div>
                 </div>
             </main>
+            {/* Pop-up Survey Confirmation Modal */}
+            {showSurveyModal && (
+                <div style={{
+                    position: 'fixed',
+                    inset: 0,
+                    backgroundColor: 'rgba(10, 15, 29, 0.85)',
+                    backdropFilter: 'blur(12px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 9999,
+                    padding: 20,
+                }}>
+                    <div style={{
+                        background: 'var(--bg-card)',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: 20,
+                        padding: 32,
+                        maxWidth: 480,
+                        width: '100%',
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)',
+                        animation: 'fadeIn 0.2s ease-out',
+                    }}>
+                        <div style={{ textAlign: 'center', marginBottom: 20 }}>
+                            <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>📋</div>
+                            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', color: 'var(--text-primary)', margin: 0 }}>
+                                Konfirmasi Jadwal Survey
+                            </h3>
+                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: 6 }}>
+                                Mohon periksa kembali detail survey lokasi Anda sebelum mengonfirmasi.
+                            </p>
+                        </div>
+
+                        <div style={{
+                            background: 'var(--bg-secondary)',
+                            border: '1px solid var(--border-color)',
+                            borderRadius: 14,
+                            padding: 18,
+                            marginBottom: 24,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 12,
+                        }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>🏡 Properti:</span>
+                                <strong style={{ color: 'var(--text-primary)', fontSize: '0.85rem', textAlign: 'right', flex: 1 }}>{property.title}</strong>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>📍 Lokasi:</span>
+                                <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', textAlign: 'right', flex: 1 }}>{property.city}, {property.province}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, borderTop: '1px border-box rgba(255,255,255,0.08)', paddingTop: 8 }}>
+                                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>📅 Tanggal:</span>
+                                <strong style={{ color: 'var(--gold-primary)', fontSize: '0.9rem' }}>{surveyDate}</strong>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>🕐 Jam Survey:</span>
+                                <strong style={{ color: 'var(--gold-primary)', fontSize: '0.9rem' }}>{surveyTime} WIB</strong>
+                            </div>
+                            {surveyNote && (
+                                <div style={{ borderTop: '1px border-box rgba(255,255,255,0.08)', paddingTop: 8 }}>
+                                    <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', display: 'block', marginBottom: 4 }}>📝 Catatan:</span>
+                                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: 0, fontStyle: 'italic' }}>"{surveyNote}"</p>
+                                </div>
+                            )}
+                        </div>
+
+                        <div style={{ display: 'flex', gap: 12 }}>
+                            <button
+                                type="button"
+                                onClick={() => setShowSurveyModal(false)}
+                                style={{
+                                    flex: 1,
+                                    padding: '12px 16px',
+                                    borderRadius: 10,
+                                    border: '1px solid var(--border-color)',
+                                    background: 'transparent',
+                                    color: 'var(--text-secondary)',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                ✖️ Batal
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleSurvey}
+                                disabled={isProcessing}
+                                style={{
+                                    flex: 1.5,
+                                    padding: '12px 16px',
+                                    borderRadius: 10,
+                                    border: 'none',
+                                    background: 'var(--gold-gradient)',
+                                    color: '#0a0f1d',
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                {isProcessing ? '⏳ Memproses...' : '✅ Konfirmasi'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <Footer />
             <ChatBot />
 

@@ -51,15 +51,17 @@ func (h *BookingHandler) CreateSurvey(c *gin.Context) {
 		return
 	}
 
-	// Check for date conflict - same property, same date, not cancelled
-	var conflictCount int64
-	h.DB.Model(&models.Booking{}).
-		Where("property_id = ? AND survey_date = ? AND status != ?",
-			input.PropertyID, surveyDate.Format("2006-01-02"), models.BookingCancelled).
-		Count(&conflictCount)
-	if conflictCount > 0 {
-		c.JSON(http.StatusConflict, gin.H{"error": "Tanggal ini sudah dibooking. Silakan pilih tanggal lain."})
-		return
+	// Check for date + time conflict - same property, same date AND same time slot
+	if input.SurveyTime != "" {
+		var conflictCount int64
+		h.DB.Model(&models.Booking{}).
+			Where("property_id = ? AND survey_date = ? AND survey_time = ? AND status != ?",
+				input.PropertyID, surveyDate.Format("2006-01-02"), input.SurveyTime, models.BookingCancelled).
+			Count(&conflictCount)
+		if conflictCount > 0 {
+			c.JSON(http.StatusConflict, gin.H{"error": fmt.Sprintf("Jam %s pada tanggal ini sudah di-booking. Silakan pilih jam lain.", input.SurveyTime)})
+			return
+		}
 	}
 
 	booking := models.Booking{
@@ -87,7 +89,7 @@ func (h *BookingHandler) CreateSurvey(c *gin.Context) {
 	// Send booking email (async)
 	go SendBookingCreatedEmail(h.Cfg, booking.Customer.Name, booking.Customer.Email,
 		booking.Property.Title, string(booking.BookingType),
-		fmt.Sprintf("Survey tanggal %s", surveyDate.Format("02 Jan 2006")))
+		fmt.Sprintf("Survey tanggal %s jam %s WIB", surveyDate.Format("02 Jan 2006"), input.SurveyTime))
 }
 
 // CreatePurchase creates a purchase booking (after survey)
@@ -354,7 +356,7 @@ func (h *BookingHandler) GetByID(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"booking": booking})
 }
 
-// GetBookedDates returns all booked dates for a property
+// GetBookedDates returns all booked survey slots (date+time) and rental date ranges for a property
 func (h *BookingHandler) GetBookedDates(c *gin.Context) {
 	propertyID := c.Param("id")
 
@@ -362,10 +364,21 @@ func (h *BookingHandler) GetBookedDates(c *gin.Context) {
 	h.DB.Where("property_id = ? AND status != ?", propertyID, models.BookingCancelled).
 		Find(&bookings)
 
+	type Slot struct {
+		Date string `json:"date"`
+		Time string `json:"time"`
+	}
+	var slots []Slot
 	var dates []string
+
 	for _, b := range bookings {
 		if b.SurveyDate != nil {
-			dates = append(dates, b.SurveyDate.Format("2006-01-02"))
+			dStr := b.SurveyDate.Format("2006-01-02")
+			tStr := b.SurveyTime
+			if tStr != "" {
+				slots = append(slots, Slot{Date: dStr, Time: tStr})
+			}
+			dates = append(dates, dStr)
 		}
 		if b.StartDate != nil && b.EndDate != nil {
 			// For rental bookings, add all dates in the range
@@ -375,5 +388,8 @@ func (h *BookingHandler) GetBookedDates(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{"booked_dates": dates})
+	c.JSON(http.StatusOK, gin.H{
+		"booked_slots": slots,
+		"booked_dates": dates,
+	})
 }
