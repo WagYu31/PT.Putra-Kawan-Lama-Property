@@ -115,6 +115,9 @@ $clean_path = rtrim($path, '/');
 if ($clean_path === '') $clean_path = '/index';
 
 $html_file = __DIR__ . $clean_path . '.html';
+if (!file_exists($html_file)) {
+    $html_file = __DIR__ . $clean_path . '/index.html';
+}
 if (file_exists($html_file)) {
     header("Content-Type: text/html; charset=utf-8");
     header("Cache-Control: no-cache, no-store, must-revalidate, max-age=0");
@@ -146,6 +149,14 @@ if (file_exists(__DIR__ . '/index.html')) {
     readfile(__DIR__ . '/index.html');
     exit;
 }
+EOF
+
+# 7. Create .htaccess to disable directory index and route all requests to index.php
+cat << 'EOF' > ~/trgmix.online/.htaccess
+Options -Indexes
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php [L]
 EOF
 
 echo "=== BACKEND LOG ==="
