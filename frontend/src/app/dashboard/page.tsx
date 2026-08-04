@@ -401,13 +401,7 @@ function DashboardContent() {
 
                     {activeTab === 'saved' && <FavoritesTab />}
 
-                    {activeTab === 'inquiries' && (
-                        <div className={styles.emptyState}>
-                            <span className={styles.emptyIcon}>📭</span>
-                            <h3>Data Kosong</h3>
-                            <p>Belum ada data yang tersedia untuk ditampilkan</p>
-                        </div>
-                    )}
+                    {activeTab === 'inquiries' && <InquiryManager />}
 
                     {activeTab === 'profile' && <ProfileManager />}
                 </div>
@@ -2040,6 +2034,109 @@ function FavoritesTab() {
                         </div>
                     );
                 })}
+            </div>
+        </div>
+    );
+}
+
+/* ========== INQUIRY MANAGER (Admin & Owner) ========== */
+function InquiryManager() {
+    const { token } = useAuth();
+    const [inquiries, setInquiries] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    const fetchInquiries = async () => {
+        if (!token) return;
+        try {
+            const res = await fetch(`${API_URL}/api/inquiries`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setInquiries(data.inquiries || []);
+            }
+        } catch { } finally { setLoading(false); }
+    };
+
+    useEffect(() => { fetchInquiries(); }, [token]);
+
+    const markRead = async (id: number) => {
+        try {
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/inquiries/${id}/read`, {
+                method: 'PATCH',
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            fetchInquiries();
+        } catch { }
+    };
+
+    if (loading) return <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>⏳ Memuat pesan masuk...</div>;
+
+    if (inquiries.length === 0) {
+        return (
+            <div className={styles.emptyState}>
+                <span className={styles.emptyIcon}>📩</span>
+                <h3>Belum Ada Pesan Masuk (Inquiry)</h3>
+                <p>Pesan atau pertanyaan calon pembeli yang dikirim dari halaman Kontak & Properti akan muncul di sini.</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className={styles.tableContainer}>
+            <div className={styles.tableHeader}>
+                <h2>📩 Pesan Masuk / Inquiry ({inquiries.length})</h2>
+            </div>
+            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                <table className={styles.table}>
+                    <thead>
+                        <tr>
+                            <th>Pengirim</th>
+                            <th>Kontak</th>
+                            <th>Subjek / Properti</th>
+                            <th>Pesan</th>
+                            <th>Tanggal</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {inquiries.map((inq: any) => (
+                            <tr key={inq.id} style={{ opacity: inq.is_read ? 0.7 : 1, background: !inq.is_read ? 'rgba(201,168,76,0.04)' : undefined }}>
+                                <td>
+                                    <strong>{inq.name}</strong>
+                                </td>
+                                <td>
+                                    <div style={{ fontSize: '0.85rem' }}>
+                                        <p style={{ margin: 0 }}>📧 {inq.email}</p>
+                                        {inq.phone && <p style={{ margin: '2px 0 0', color: 'var(--text-muted)' }}>📞 {inq.phone}</p>}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{inq.property?.title || inq.subject || 'Pertanyaan Umum'}</span>
+                                </td>
+                                <td style={{ maxWidth: 300, whiteSpace: 'normal', fontSize: '0.85rem' }}>
+                                    {inq.message}
+                                </td>
+                                <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                    {new Date(inq.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                </td>
+                                <td>
+                                    {!inq.is_read ? (
+                                        <button onClick={() => markRead(inq.id)} style={{
+                                            padding: '4px 10px', borderRadius: 8, border: 'none',
+                                            background: 'var(--gold-primary)', color: '#000', fontSize: '0.75rem',
+                                            fontWeight: 600, cursor: 'pointer'
+                                        }}>
+                                            Tandai Dibaca
+                                        </button>
+                                    ) : (
+                                        <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>✅ Dibaca</span>
+                                    )}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
             </div>
         </div>
     );
