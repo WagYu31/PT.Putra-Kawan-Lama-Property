@@ -276,7 +276,10 @@ func (h *BookingHandler) List(c *gin.Context) {
 
 	switch userRole.(models.Role) {
 	case models.RoleCustomer:
-		query = query.Where("customer_id = ?", userID)
+		query = query.Where("bookings.customer_id = ?", userID)
+	case models.RoleOwner:
+		query = query.Joins("JOIN properties ON properties.id = bookings.property_id").
+			Where("properties.owner_id = ?", userID)
 	case models.RoleAdmin:
 		// Admin sees all
 	default:
@@ -304,16 +307,19 @@ func (h *BookingHandler) List(c *gin.Context) {
 			"page":        page,
 			"limit":       limit,
 			"total":       total,
-			"total_pages": int(math.Ceil(float64(total) / float64(limit))),
+			"total_pages": (total + int64(limit) - 1) / int64(limit),
 		},
 	})
 }
 
-// UpdateStatus updates booking status
+// UpdateStatus updates a booking status (admin/owner)
 func (h *BookingHandler) UpdateStatus(c *gin.Context) {
 	id := c.Param("id")
+	userID, _ := c.Get("userID")
+	userRole, _ := c.Get("userRole")
+
 	var input struct {
-		Status string `json:"status" binding:"required"`
+		Status models.BookingStatus `json:"status" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -326,12 +332,18 @@ func (h *BookingHandler) UpdateStatus(c *gin.Context) {
 		return
 	}
 
+	// Permission check for Owner
+	if userRole.(models.Role) == models.RoleOwner && booking.Property.OwnerID != userID.(uint) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Not authorized to update status for this property"})
+		return
+	}
+
 	h.DB.Model(&booking).Update("status", input.Status)
 	c.JSON(http.StatusOK, gin.H{"message": "Booking status updated"})
 
 	// Send status update email (async)
 	go SendBookingStatusEmail(h.Cfg, booking.Customer.Name, booking.Customer.Email,
-		booking.Property.Title, input.Status)
+		booking.Property.Title, string(input.Status))
 	log.Printf("📧 Booking status email queued: %s → %s", booking.Customer.Email, input.Status)
 }
 
@@ -350,6 +362,10 @@ func (h *BookingHandler) GetByID(c *gin.Context) {
 	// Check permission
 	if userRole.(models.Role) == models.RoleCustomer && booking.CustomerID != userID.(uint) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Not your booking"})
+		return
+	}
+	if userRole.(models.Role) == models.RoleOwner && booking.Property.OwnerID != userID.(uint) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Not your property's booking"})
 		return
 	}
 
