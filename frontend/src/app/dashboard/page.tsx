@@ -912,13 +912,26 @@ function PropertyManager() {
                                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 12, marginBottom: 16 }}>
                                                 {form.images.map((imgUrl, idx) => {
                                                     const fullSrc = imgUrl.startsWith('/') ? `${API_URL}${imgUrl}` : imgUrl;
+                                                    const fallbackImg = 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&auto=format&fit=crop';
+
                                                     return (
                                                         <div key={idx} style={{
                                                             position: 'relative', borderRadius: 10, overflow: 'hidden',
-                                                            border: '1px solid var(--border-color)', background: '#111',
+                                                            border: '1px solid var(--border-color)', background: 'var(--bg-tertiary)',
                                                             aspectRatio: '4/3', display: 'flex', alignItems: 'center', justifyContent: 'center'
                                                         }}>
-                                                            <img src={fullSrc} alt={`Property ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
+                                                            <span style={{ fontSize: '1.5rem', opacity: 0.3 }}>🏠</span>
+                                                            <img 
+                                                                src={fullSrc} 
+                                                                alt={`Property ${idx + 1}`} 
+                                                                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} 
+                                                                onError={(e) => { 
+                                                                    const target = e.currentTarget;
+                                                                    if (target.src !== fallbackImg) {
+                                                                        target.src = fallbackImg;
+                                                                    }
+                                                                }} 
+                                                            />
                                                             
                                                             {/* Index Badge */}
                                                             <span style={{
