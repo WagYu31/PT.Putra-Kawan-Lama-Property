@@ -9,14 +9,34 @@ import styles from './contact.module.css';
 
 export default function ContactPage() {
     const [form, setForm] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
+    const [loading, setLoading] = useState(false);
     const [sent, setSent] = useState(false);
+    const [error, setError] = useState('');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // In production: api('/api/inquiries', { method: 'POST', body: form })
-        setSent(true);
-        setTimeout(() => setSent(false), 4000);
-        setForm({ name: '', email: '', phone: '', subject: '', message: '' });
+        setLoading(true);
+        setError('');
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+            const res = await fetch(`${apiUrl}/api/inquiries`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(form),
+            });
+            if (res.ok) {
+                setSent(true);
+                setForm({ name: '', email: '', phone: '', subject: '', message: '' });
+                setTimeout(() => setSent(false), 5000);
+            } else {
+                const errData = await res.json().catch(() => ({}));
+                setError(errData.error || 'Gagal mengirim pesan. Silakan coba lagi.');
+            }
+        } catch {
+            setError('Terjadi kesalahan jaringan. Silakan coba lagi.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -73,7 +93,8 @@ export default function ContactPage() {
 
                             <form className={styles.contactForm} onSubmit={handleSubmit}>
                                 <h2>Kirim Pesan</h2>
-                                {sent && <div className={styles.success}>Pesan terkirim! Kami akan segera menghubungi Anda.</div>}
+                                {sent && <div className={styles.success}>✅ Pesan terkirim! Pesan Anda telah masuk ke sistem dan akan segera kami respon.</div>}
+                                {error && <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', padding: '10px 14px', borderRadius: 8, fontSize: '0.85rem', marginBottom: 16 }}>⚠️ {error}</div>}
                                 <div className="form-group">
                                     <label className="form-label">Nama</label>
                                     <input type="text" className="form-input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
@@ -96,7 +117,9 @@ export default function ContactPage() {
                                     <label className="form-label">Pesan</label>
                                     <textarea className="form-input" rows={5} value={form.message} onChange={e => setForm({ ...form, message: e.target.value })} required style={{ resize: 'vertical' }} />
                                 </div>
-                                <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%' }}>Kirim Pesan</button>
+                                <button type="submit" disabled={loading} className="btn btn-primary btn-lg" style={{ width: '100%' }}>
+                                    {loading ? 'Mengirim...' : 'Kirim Pesan'}
+                                </button>
                             </form>
                         </div>
                     </div>
