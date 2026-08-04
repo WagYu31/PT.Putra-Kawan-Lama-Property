@@ -2100,17 +2100,30 @@ function InquiryManager() {
                         </tr>
                     </thead>
                     <tbody>
-                        {inquiries.map((inq: any) => (
-                            <tr key={inq.id} style={{ opacity: inq.is_read ? 0.7 : 1, background: !inq.is_read ? 'rgba(201,168,76,0.04)' : undefined }}>
-                                <td>
-                                    <strong>{inq.name}</strong>
-                                </td>
-                                <td>
-                                    <div style={{ fontSize: '0.85rem' }}>
-                                        <p style={{ margin: 0 }}>📧 {inq.email}</p>
-                                        {inq.phone && <p style={{ margin: '2px 0 0', color: 'var(--text-muted)' }}>📞 {inq.phone}</p>}
-                                    </div>
-                                </td>
+                        {inquiries.map((inq: any) => {
+                            const cleanPhone = inq.phone ? inq.phone.replace(/[^0-9]/g, '') : '';
+                            const waNumber = cleanPhone.startsWith('0') ? '62' + cleanPhone.slice(1) : cleanPhone;
+                            const waLink = waNumber ? `https://wa.me/${waNumber}` : '';
+
+                            return (
+                                <tr key={inq.id} style={{ opacity: inq.is_read ? 0.7 : 1, background: !inq.is_read ? 'rgba(201,168,76,0.04)' : undefined }}>
+                                    <td>
+                                        <strong>{inq.name}</strong>
+                                    </td>
+                                    <td>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: '0.85rem' }}>
+                                            {inq.email && (
+                                                <a href={`mailto:${inq.email}`} style={{ color: '#3b82f6', textDecoration: 'none', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                                    📧 {inq.email}
+                                                </a>
+                                            )}
+                                            {inq.phone && (
+                                                <a href={waLink} target="_blank" rel="noopener noreferrer" style={{ color: '#10b981', textDecoration: 'none', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                                    💬 {inq.phone} (WhatsApp)
+                                                </a>
+                                            )}
+                                        </div>
+                                    </td>
                                 <td>
                                     <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{inq.property?.title || inq.subject || 'Pertanyaan Umum'}</span>
                                 </td>
@@ -2134,7 +2147,8 @@ function InquiryManager() {
                                     )}
                                 </td>
                             </tr>
-                        ))}
+                        );
+                    })}
                     </tbody>
                 </table>
             </div>
