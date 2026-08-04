@@ -98,6 +98,11 @@ if ($path !== '/' && file_exists($file_path) && !is_dir($file_path)) {
         'html' => 'text/html; charset=utf-8'
     ];
     if (isset($mimeTypes[$ext])) header("Content-Type: " . $mimeTypes[$ext]);
+    if (in_array($ext, ['html', 'js', 'css', 'json'])) {
+        header("Cache-Control: no-cache, no-store, must-revalidate, max-age=0");
+        header("Pragma: no-cache");
+        header("Expires: 0");
+    }
     readfile($file_path);
     exit;
 }
@@ -109,6 +114,9 @@ if ($clean_path === '') $clean_path = '/index';
 $html_file = __DIR__ . $clean_path . '.html';
 if (file_exists($html_file)) {
     header("Content-Type: text/html; charset=utf-8");
+    header("Cache-Control: no-cache, no-store, must-revalidate, max-age=0");
+    header("Pragma: no-cache");
+    header("Expires: 0");
     readfile($html_file);
     exit;
 }
@@ -118,6 +126,9 @@ if (preg_match('#^/properties/[^/]+$#', $clean_path)) {
     $detail_html = __DIR__ . '/properties/[id].html';
     if (file_exists($detail_html)) {
         header("Content-Type: text/html; charset=utf-8");
+        header("Cache-Control: no-cache, no-store, must-revalidate, max-age=0");
+        header("Pragma: no-cache");
+        header("Expires: 0");
         readfile($detail_html);
         exit;
     }
@@ -126,6 +137,9 @@ if (preg_match('#^/properties/[^/]+$#', $clean_path)) {
 // E. Fallback to index.html
 if (file_exists(__DIR__ . '/index.html')) {
     header("Content-Type: text/html; charset=utf-8");
+    header("Cache-Control: no-cache, no-store, must-revalidate, max-age=0");
+    header("Pragma: no-cache");
+    header("Expires: 0");
     readfile(__DIR__ . '/index.html');
     exit;
 }
