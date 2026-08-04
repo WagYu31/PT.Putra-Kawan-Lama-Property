@@ -2104,6 +2104,8 @@ function InquiryManager() {
                             const cleanPhone = inq.phone ? inq.phone.replace(/[^0-9]/g, '') : '';
                             const waNumber = cleanPhone.startsWith('0') ? '62' + cleanPhone.slice(1) : cleanPhone;
                             const waLink = waNumber ? `https://wa.me/${waNumber}` : '';
+                            const subjectTitle = inq.property?.title || inq.subject || 'Informasi Properti PKWL';
+                            const gmailLink = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(inq.email)}&su=${encodeURIComponent('Balasan Inquiry: ' + subjectTitle)}`;
 
                             return (
                                 <tr key={inq.id} style={{ opacity: inq.is_read ? 0.7 : 1, background: !inq.is_read ? 'rgba(201,168,76,0.04)' : undefined }}>
@@ -2113,7 +2115,7 @@ function InquiryManager() {
                                     <td>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: '0.85rem' }}>
                                             {inq.email && (
-                                                <a href={`mailto:${inq.email}`} style={{ color: '#3b82f6', textDecoration: 'none', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                                <a href={gmailLink} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'none', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                                                     📧 {inq.email}
                                                 </a>
                                             )}
