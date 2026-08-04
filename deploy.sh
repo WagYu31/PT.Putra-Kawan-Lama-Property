@@ -1,8 +1,11 @@
 #!/bin/bash
 echo "🚀 Starting Deployment with Self-Healing Go Backend Gateway..."
 
-# 1. Pull latest code
-cd ~/trgmix.online && git pull origin main
+# 1. Clean working directory & pull latest code
+cd ~/trgmix.online
+git reset --hard HEAD 2>/dev/null || true
+git clean -fd 2>/dev/null || true
+git pull origin main 2>/dev/null || true
 
 # 2. Kill any old background processes
 pkill -9 -u $(whoami) -f "node|go|pkwl|main" 2>/dev/null || true
